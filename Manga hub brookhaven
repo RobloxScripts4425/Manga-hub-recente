@@ -6,9 +6,9 @@ local Window = OrionLib:MakeWindow({Name = "Manga Hub 4.2", HidePremium = true})
 
 -- Função para criar a aba de jogador
 local Tab = Window:MakeTab({
-	Name = "Jogador",
-	Icon = "rbxassetid://4483345998",
-	PremiumOnly = false
+    Name = "Jogador",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
 })
 
 -- Variáveis para controle de fling
@@ -27,10 +27,10 @@ local function startFling(playerIdentifier)
     end
 
     local targetPlayer = game.Players:FindFirstChild(playerIdentifier)
-
+    
     if not targetPlayer then
         for _, p in ipairs(game.Players:GetPlayers()) do
-            if p.DisplayName:lower():sub(1, #playerIdentifier:lower()) == playerIdentifier:lower() then
+            if p.DisplayName:lower():find(playerIdentifier:lower(), 1, true) then
                 targetPlayer = p
                 break
             end
@@ -98,28 +98,28 @@ end
 
 -- Adicionar controles na aba Jogador
 Tab:AddTextbox({
-	Name = "Nome do Jogador",
-	Callback = function(value)
-		playerName = value
-	end    
+    Name = "Nome do Jogador",
+    Callback = function(value)
+        playerName = value
+    end    
 })
 
 Tab:AddButton({
-	Name = "Iniciar Fling",
-	Callback = function()
-		if playerName and playerName ~= "" then
-			startFling(playerName)
-		else
-			print("Por favor, insira o nome do jogador.")
-		end
-	end    
+    Name = "Iniciar Fling",
+    Callback = function()
+        if playerName and playerName ~= "" then
+            startFling(playerName)
+        else
+            print("Por favor, insira o nome do jogador.")
+        end
+    end    
 })
 
 Tab:AddButton({
-	Name = "Parar Fling",
-	Callback = function()
-		stopFling()
-	end    
+    Name = "Parar Fling",
+    Callback = function()
+        stopFling()
+    end    
 })
 
 -- Função para Anti-Sit
@@ -127,35 +127,35 @@ local antiSitEnabled = false
 local antiSitConnection
 
 Tab:AddToggle({
-	Name = "Anti-Sit",
-	Default = false,
-	Callback = function(enabled)
-		antiSitEnabled = enabled
+    Name = "Anti-Sit",
+    Default = false,
+    Callback = function(enabled)
+        antiSitEnabled = enabled
 
-		if antiSitEnabled then
-			local function preventSitting()
-				local player = game.Players.LocalPlayer
-				local character = player.Character
-				if character and character:FindFirstChild("Humanoid") then
-					local humanoid = character.Humanoid
-					humanoid.SittingChanged:Connect(function(isSitting)
-						if isSitting then
-							humanoid:ChangeState(Enum.HumanoidStateType.Seated)
-							print("Anti-Sit ativado. Sentar foi evitado.")
-						end
-					end)
-				end
-			end
-			preventSitting()
-			print("Anti-Sit ativado.")
-		else
-			if antiSitConnection then
-				antiSitConnection:Disconnect()
-				antiSitConnection = nil
-				print("Anti-Sit desativado.")
-			end
-		end
-	end    
+        if antiSitEnabled then
+            local function preventSitting()
+                local player = game.Players.LocalPlayer
+                local character = player.Character
+                if character and character:FindFirstChild("Humanoid") then
+                    local humanoid = character.Humanoid
+                    humanoid.SittingChanged:Connect(function(isSitting)
+                        if isSitting then
+                            humanoid:ChangeState(Enum.HumanoidStateType.Seated)
+                            print("Anti-Sit ativado. Sentar foi evitado.")
+                        end
+                    end)
+                end
+            end
+            preventSitting()
+            print("Anti-Sit ativado.")
+        else
+            if antiSitConnection then
+                antiSitConnection:Disconnect()
+                antiSitConnection = nil
+                print("Anti-Sit desativado.")
+            end
+        end
+    end    
 })
 
 -- Função para ESP
@@ -199,84 +199,84 @@ end
 
 -- Adicionar botão ESP
 Tab:AddButton({
-	Name = "ESP",
-	Callback = function()
-		-- Apply ESP to all players currently in the game
-		for _, player in ipairs(game.Players:GetPlayers()) do
-			addEspToPlayer(player)
-		end
+    Name = "ESP",
+    Callback = function()
+        -- Apply ESP to all players currently in the game
+        for _, player in ipairs(game.Players:GetPlayers()) do
+            addEspToPlayer(player)
+        end
 
-		-- Apply ESP to new players that join the game
-		game.Players.PlayerAdded:Connect(addEspToPlayer)
-	end    
+        -- Apply ESP to new players that join the game
+        game.Players.PlayerAdded:Connect(addEspToPlayer)
+    end    
 })
 
 -- Função para aumentar a saúde
 Tab:AddButton({
-	Name = "+10 Saúde",
-	Callback = function()
-		local player = game.Players.LocalPlayer
-		local character = player.Character
-		if character and character:FindFirstChildOfClass("Humanoid") then
-			local humanoid = character:FindFirstChildOfClass("Humanoid")
-			humanoid.Health = humanoid.Health + 10
-			print("Saúde aumentada em 10.")
-		else
-			print("Humanoide não encontrado no personagem.")
-		end
-	end    
+    Name = "+10 Saúde",
+    Callback = function()
+        local player = game.Players.LocalPlayer
+        local character = player.Character
+        if character and character:FindFirstChildOfClass("Humanoid") then
+            local humanoid = character:FindFirstChildOfClass("Humanoid")
+            humanoid.Health = humanoid.Health + 10
+            print("Saúde aumentada em 10.")
+        else
+            print("Humanoide não encontrado no personagem.")
+        end
+    end    
 })
 
 -- Função para clonar itens
 Tab:AddButton({
-	Name = "Clonar Itens",
-	Callback = function()
-		local player = game.Players.LocalPlayer
-		if player and player.Backpack then
-			-- Clona todos os itens no Backpack do jogador
-			for _, item in ipairs(player.Backpack:GetChildren()) do
-				if item:IsA("Tool") then
-					-- Clona o item
-					local clonedItem = item:Clone()
-					clonedItem.Parent = player.Backpack
-					print("Item " .. item.Name .. " clonado e adicionado ao inventário.")
-				end
-			end
-		else
-			print("Jogador não encontrado ou Backpack não disponível.")
-		end
-	end    
+    Name = "Clonar Itens",
+    Callback = function()
+        local player = game.Players.LocalPlayer
+        if player and player.Backpack then
+            -- Clona todos os itens no Backpack do jogador
+            for _, item in ipairs(player.Backpack:GetChildren()) do
+                if item:IsA("Tool") then
+                    -- Clona o item
+                    local clonedItem = item:Clone()
+                    clonedItem.Parent = player.Backpack
+                    print("Item " .. item.Name .. " clonado e adicionado ao inventário.")
+                end
+            end
+        else
+            print("Jogador não encontrado ou Backpack não disponível.")
+        end
+    end    
 })
 
 -- Função para adicionar Tp Tool
 Tab:AddButton({
-	Name = "Tp Tool",
-	Callback = function()
-		local player = game.Players.LocalPlayer
-		local backpack = player.Backpack
+    Name = "Tp Tool",
+    Callback = function()
+        local player = game.Players.LocalPlayer
+        local backpack = player.Backpack
 
-		-- Criar o item tptool
-		local tpTool = Instance.new("Tool")
-		tpTool.Name = "Teleport Tool"
-		tpTool.RequiresHandle = true
-		tpTool.CanBeDropped = false
-		tpTool.Parent = backpack
+        -- Criar o item tptool
+        local tpTool = Instance.new("Tool")
+        tpTool.Name = "Teleport Tool"
+        tpTool.RequiresHandle = true
+        tpTool.CanBeDropped = false
+        tpTool.Parent = backpack
 
-		local handle = Instance.new("Part")
-		handle.Name = "Handle"
-		handle.Size = Vector3.new(1, 1, 1)
-		handle.Parent = tpTool
+        local handle = Instance.new("Part")
+        handle.Name = "Handle"
+        handle.Size = Vector3.new(1, 1, 1)
+        handle.Parent = tpTool
 
-		tpTool.Activated:Connect(function()
-			-- Teleporte o jogador para a posição do mouse
-			local mouse = player:GetMouse()
-			local targetPosition = mouse.Hit.Position
-			player.Character:SetPrimaryPartCFrame(CFrame.new(targetPosition))
-			print("Jogador teleportado para a posição do mouse.")
-		end)
+        tpTool.Activated:Connect(function()
+            -- Teleporte o jogador para a posição do mouse
+            local mouse = player:GetMouse()
+            local targetPosition = mouse.Hit.Position
+            player.Character:SetPrimaryPartCFrame(CFrame.new(targetPosition))
+            print("Jogador teleportado para a posição do mouse.")
+        end)
 
-		print("Tp Tool adicionada ao inventário.")
-	end    
+        print("Tp Tool adicionada ao inventário.")
+    end    
 })
 
 -- Atualizar janela
