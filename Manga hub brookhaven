@@ -2,7 +2,7 @@
 local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/shlexware/Orion/main/source"))()
 
 -- Criar a interface sem atalho
-local Window = OrionLib:MakeWindow({Name = "Manga Hub 4.2", HidePremium = true})
+local Window = OrionLib:MakeWindow({Name = "Manga Hub 4.2.1", HidePremium = true})
 
 -- Função para criar a aba de jogador
 local Tab = Window:MakeTab({
