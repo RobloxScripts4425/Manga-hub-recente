@@ -1,19 +1,26 @@
 -- Carregar biblioteca Orion
 local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/shlexware/Orion/main/source"))()
 
--- Criar a interface sem atalho
-local Window = OrionLib:MakeWindow({Name = "Manga Hub 4.2.1", HidePremium = true})
+-- Criar a interface
+local Window = OrionLib:MakeWindow({Name = "Manga Hub 4.2.2", HidePremium = true})
 
--- Criar a aba de jogador
+-- Função para criar a aba de jogador
 local PlayerTab = Window:MakeTab({
     Name = "Jogador",
     Icon = "rbxassetid://4483345998",
     PremiumOnly = false
 })
 
--- Criar a aba de troll
+-- Função para criar a aba de troll
 local TrollTab = Window:MakeTab({
     Name = "Troll",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+-- Função para criar a aba de jogo
+local GameTab = Window:MakeTab({
+    Name = "Jogo",
     Icon = "rbxassetid://4483345998",
     PremiumOnly = false
 })
@@ -25,11 +32,7 @@ local teleportDistance = 50
 local teleportDelay = 0.2
 local teleportCooldown = 0.2
 local playerName
-local previousPosition
-local antiSitEnabled = false
-local antiSitConnection
-local floatEnabled = false
-local floatHeight = 10 -- Altura para flutuar
+local previousPosition = nil
 
 -- Função para iniciar o fling
 local function startFling(playerIdentifier)
@@ -56,25 +59,28 @@ local function startFling(playerIdentifier)
         local humanoid = targetPlayer.Character:FindFirstChildOfClass("Humanoid")
 
         if localHRP and targetHRP and humanoid then
-            previousPosition = localHRP.Position
-
             local function fling()
-                if humanoid.MoveDirection.Magnitude > 0 or humanoid:GetState() == Enum.HumanoidStateType.Physics then
+                if not previousPosition then
+                    previousPosition = localHRP.Position
+                end
+
+                if humanoid.MoveDirection.Magnitude > 0 or humanoid.Jump then
                     local offset = targetHRP.CFrame.LookVector * -2.5
                     local positionBehind = targetHRP.Position + offset
                     localHRP.CFrame = CFrame.new(positionBehind, targetHRP.Position)
                     localHRP.Velocity = (targetHRP.Position - localHRP.Position).unit * flingSpeed
                 else
-                    -- Volta à posição original quando o jogador está parado
-                    localHRP.CFrame = CFrame.new(previousPosition, targetHRP.Position)
+                    if previousPosition then
+                        localHRP.CFrame = CFrame.new(previousPosition)
+                        previousPosition = nil
+                    end
                 end
-                wait(0.1) -- Adicionando wait para reduzir o travamento
             end
 
             local function teleport()
                 local lastTeleportTime = tick()
                 while targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") do
-                    if humanoid.MoveDirection.Magnitude > 0 or humanoid:GetState() == Enum.HumanoidStateType.Physics then
+                    if humanoid.MoveDirection.Magnitude > 0 or humanoid.Jump then
                         local currentTime = tick()
                         if currentTime - lastTeleportTime >= teleportCooldown then
                             local targetPosition = targetHRP.Position
@@ -83,8 +89,10 @@ local function startFling(playerIdentifier)
                             localHRP.CFrame = CFrame.new(targetPosition + targetHRP.CFrame.LookVector * teleportDistance, targetPosition)
                             lastTeleportTime = currentTime
                         end
+                        wait(teleportDelay)
+                    else
+                        wait(0.1)
                     end
-                    wait(0.1) -- Adicionando wait para reduzir o travamento
                 end
             end
 
@@ -93,7 +101,7 @@ local function startFling(playerIdentifier)
                     fling()
                     teleport()
                 end
-                wait(0.1) -- Adicionando wait para reduzir o travamento
+                wait(0.1) -- Reduz a frequência da atualização para melhorar o desempenho
             end)
             print("Fling iniciado no jogador: " .. targetPlayer.DisplayName)
         else
@@ -109,15 +117,12 @@ local function stopFling()
     if flingConnection then
         flingConnection:Disconnect()
         flingConnection = nil
-
-        -- Definir a saúde do jogador como 0
         local player = game.Players.LocalPlayer
-        if player and player.Character and player.Character:FindFirstChildOfClass("Humanoid") then
-            local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
+        local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
+        if humanoid then
             humanoid.Health = 0
+            print("Fling parado e saúde definida para 0.")
         end
-
-        print("Fling parado e saúde do jogador definida como 0.")
     else
         print("Nenhum fling ativo para parar.")
     end
@@ -150,6 +155,9 @@ PlayerTab:AddButton({
 })
 
 -- Função para Anti-Sit
+local antiSitEnabled = false
+local antiSitConnection
+
 PlayerTab:AddToggle({
     Name = "Anti-Sit",
     Default = false,
@@ -241,33 +249,126 @@ PlayerTab:AddButton({
     Callback = function()
         local player = game.Players.LocalPlayer
         local character = player.Character
-        if character and character:FindFirstChildOfClass("Humanoid") then
-            local humanoid = character:FindFirstChildOfClass("Humanoid")
+        if character and character:FindFirstChild("Humanoid") then
+            local humanoid = character.Humanoid
             humanoid.Health = humanoid.Health + 10
             print("Saúde aumentada em 10.")
+        end
+    end    
+})
+
+-- Função para +30 Pulo e retorno ao normal
+local originalJumpPower = 50
+
+PlayerTab:AddButton({
+    Name = "+30 Pulo",
+    Callback = function()
+        local player = game.Players.LocalPlayer
+        local character = player.Character
+        if character and character:FindFirstChild("Humanoid") then
+            local humanoid = character.Humanoid
+            humanoid.JumpPower = humanoid.JumpPower + 30
+            print("Pulo aumentado em 30.")
+        end
+    end    
+})
+
+PlayerTab:AddButton({
+    Name = "Pulo e Velocidade Normal",
+    Callback = function()
+        local player = game.Players.LocalPlayer
+        local character = player.Character
+        if character and character:FindFirstChild("Humanoid") then
+            local humanoid = character.Humanoid
+            humanoid.JumpPower = originalJumpPower
+            humanoid.WalkSpeed = 16
+            print("Pulo e velocidade restaurados ao normal.")
+        end
+    end    
+})
+
+-- Função para abrir as configurações do jogo
+GameTab:AddButton({
+    Name = "Config do Jogo",
+    Callback = function()
+        local gui = Instance.new("ScreenGui")
+        gui.Parent = game.Players.LocalPlayer.PlayerGui
+
+        local frame = Instance.new("Frame")
+        frame.Size = UDim2.new(1, 0, 1, 0)
+        frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+        frame.BackgroundTransparency = 0.5
+        frame.Parent = gui
+
+        local textLabel = Instance.new("TextLabel")
+        textLabel.Size = UDim2.new(1, 0, 0, 50)
+        textLabel.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        textLabel.Text = "Configurações do Jogo"
+        textLabel.TextColor3 = Color3.fromRGB(0, 0, 0)
+        textLabel.TextScaled = true
+        textLabel.Parent = frame
+
+        -- Adiciona lista de itens do jogo (substitua pelo método real de obtenção de itens)
+        local itemsList = Instance.new("ScrollingFrame")
+        itemsList.Size = UDim2.new(1, 0, 0.9, -50)
+        itemsList.Position = UDim2.new(0, 0, 0.1, 0)
+        itemsList.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        itemsList.Parent = frame
+
+        -- Exemplo de lista de itens (adicione aqui)
+        local items = {"Item1", "Item2", "Item3"}  -- Substitua pela sua lógica real
+        for _, item in ipairs(items) do
+            local itemLabel = Instance.new("TextLabel")
+            itemLabel.Size = UDim2.new(1, 0, 0, 50)
+            itemLabel.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
+            itemLabel.Text = item
+            itemLabel.TextColor3 = Color3.fromRGB(0, 0, 0)
+            itemLabel.Parent = itemsList
+        end
+    end    
+})
+
+-- Função para flutuar
+local floatEnabled = false
+local floatConnection
+
+PlayerTab:AddToggle({
+    Name = "Flutuar",
+    Default = false,
+    Callback = function(enabled)
+        floatEnabled = enabled
+
+        if floatEnabled then
+            local function float()
+                local player = game.Players.LocalPlayer
+                local character = player.Character
+                if character and character:FindFirstChild("HumanoidRootPart") then
+                    character.HumanoidRootPart.Anchored = true
+                    print("Flutuação ativada.")
+                end
+            end
+            float()
         else
-            print("Humanoide não encontrado no personagem.")
+            local function stopFloating()
+                local player = game.Players.LocalPlayer
+                local character = player.Character
+                if character and character:FindFirstChild("HumanoidRootPart") then
+                    character.HumanoidRootPart.Anchored = false
+                    print("Flutuação desativada.")
+                end
+            end
+            stopFloating()
         end
     end    
 })
 
 -- Função para clonar itens
-PlayerTab:AddButton({
+GameTab:AddButton({
     Name = "Clonar Itens",
     Callback = function()
-        -- Clonar itens do jogador
-        local player = game.Players.LocalPlayer
-        local character = player.Character
-        if character then
-            for _, item in ipairs(character:GetChildren()) do
-                if item:IsA("Accessory") or item:IsA("Tool") then
-                    local clonedItem = item:Clone()
-                    clonedItem.Parent = character
-                    print("Item clonado: " .. item.Name)
-                end
-            end
-        else
-            print("Nenhum item encontrado no personagem.")
-        end
+        -- Adicione aqui a lógica para clonar itens
+        print("Clonagem de itens ainda não implementada.")
     end    
 })
+
+-- Adicionar mais botões e funcionalidades conforme necessário
