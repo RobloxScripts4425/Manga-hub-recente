@@ -1,17 +1,17 @@
--- Carregar biblioteca Orion
+-- Carregar a biblioteca Orion
 local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/shlexware/Orion/main/source"))()
 
--- Criar a interface sem atalho
+-- Criar a interface
 local Window = OrionLib:MakeWindow({Name = "Manga Hub 4.2.1", HidePremium = true})
 
--- Função para criar a aba de jogador
+-- Criar a aba de Jogador
 local PlayerTab = Window:MakeTab({
     Name = "Jogador",
     Icon = "rbxassetid://4483345998",
     PremiumOnly = false
 })
 
--- Função para criar a aba de troll
+-- Criar a aba de Troll
 local TrollTab = Window:MakeTab({
     Name = "Troll",
     Icon = "rbxassetid://4483345998",
@@ -22,8 +22,9 @@ local TrollTab = Window:MakeTab({
 local flingConnection
 local flingSpeed = 1945
 local teleportDistance = 120
-local teleportDelay = 0.2
+local teleportDelay = 0.1
 local playerName
+local flingTarget
 local originalJumpPower
 local originalWalkSpeed
 
@@ -35,6 +36,7 @@ local function startFling(playerIdentifier)
     end
 
     local targetPlayer = game.Players:FindFirstChild(playerIdentifier)
+
     if not targetPlayer then
         for _, p in ipairs(game.Players:GetPlayers()) do
             if p.DisplayName:lower():sub(1, #playerIdentifier:lower()) == playerIdentifier:lower() then
@@ -52,33 +54,35 @@ local function startFling(playerIdentifier)
 
         if localHRP and targetHRP and humanoid then
             local function fling()
-                local offset = targetHRP.CFrame.LookVector * -2.5
-                local positionBehind = targetHRP.Position + offset
-                localHRP.CFrame = CFrame.new(positionBehind, targetHRP.Position)
-                localHRP.Velocity = (targetHRP.Position - localHRP.Position).unit * flingSpeed
+                if humanoid.MoveDirection.Magnitude > 0 or humanoid.Jump then
+                    local offset = targetHRP.CFrame.LookVector * -2.5
+                    local positionBehind = targetHRP.Position + offset
+                    localHRP.CFrame = CFrame.new(positionBehind, targetHRP.Position)
+                    localHRP.Velocity = (targetHRP.Position - localHRP.Position).unit * flingSpeed
+                end
             end
 
             local function teleport()
                 local lastTeleportTime = tick()
-                local lastPosition = localHRP.Position
                 while targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") do
                     if humanoid.MoveDirection.Magnitude > 0 or humanoid.Jump then
                         local currentTime = tick()
                         if currentTime - lastTeleportTime >= teleportDelay then
                             local targetPosition = targetHRP.Position
                             localHRP.CFrame = CFrame.new(targetPosition + targetHRP.CFrame.LookVector * -teleportDistance, targetPosition)
-                            wait(teleportDelay)
+                            wait(0.1)
                             localHRP.CFrame = CFrame.new(targetPosition + targetHRP.CFrame.LookVector * teleportDistance, targetPosition)
                             lastTeleportTime = currentTime
                         end
-                        wait(teleportDelay)
+                        wait(0.1)
                     else
-                        localHRP.CFrame = CFrame.new(lastPosition)
+                        localHRP.CFrame = CFrame.new(targetHRP.Position + targetHRP.CFrame.LookVector * -2.5)
                         wait(0.1)
                     end
                 end
             end
 
+            flingTarget = targetPlayer.Character
             flingConnection = game:GetService("RunService").Heartbeat:Connect(function()
                 if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
                     fling()
@@ -100,8 +104,20 @@ local function stopFling()
         flingConnection:Disconnect()
         flingConnection = nil
         print("Fling parado.")
-    else
-        print("Nenhum fling ativo para parar.")
+    end
+end
+
+-- Função para prevenir que o jogador se sente
+local function preventSitting()
+    local player = game.Players.LocalPlayer
+    if player and player.Character and player.Character:FindFirstChild("Humanoid") then
+        local humanoid = player.Character.Humanoid
+        humanoid.SittingChanged:Connect(function(isSitting)
+            if isSitting then
+                humanoid:ChangeState(Enum.HumanoidStateType.Seated)
+                print("Anti-Sit ativado. Sentar foi evitado.")
+            end
+        end)
     end
 end
 
@@ -118,6 +134,7 @@ PlayerTab:AddButton({
     Callback = function()
         if playerName and playerName ~= "" then
             startFling(playerName)
+            preventSitting() -- Ativar a prevenção de sentar quando o fling está ativado
         else
             print("Por favor, insira o nome do jogador.")
         end
@@ -131,133 +148,47 @@ PlayerTab:AddButton({
     end    
 })
 
--- Função para Anti-Sit
-local antiSitEnabled = false
-local antiSitConnection
-
-PlayerTab:AddToggle({
-    Name = "Anti-Sit",
-    Default = false,
-    Callback = function(enabled)
-        antiSitEnabled = enabled
-
-        if antiSitEnabled then
-            local function preventSitting()
-                local player = game.Players.LocalPlayer
-                local character = player.Character
-                if character and character:FindFirstChild("Humanoid") then
-                    local humanoid = character.Humanoid
-                    humanoid.SittingChanged:Connect(function(isSitting)
-                        if isSitting then
-                            humanoid:ChangeState(Enum.HumanoidStateType.Seated)
-                            print("Anti-Sit ativado. Sentar foi evitado.")
-                        end
-                    end)
-                end
-            end
-            preventSitting()
-            print("Anti-Sit ativado.")
-        else
-            if antiSitConnection then
-                antiSitConnection:Disconnect()
-                antiSitConnection = nil
-                print("Anti-Sit desativado.")
-            end
-        end
-    end    
-})
-
--- Função para ESP
-local function addEspToPlayer(player)
-    if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-        local hrp = player.Character.HumanoidRootPart
-        local displayName = player.DisplayName
-        local accountAge = player.AccountAge
-
-        -- Create BillboardGui for account age
-        local ageGui = Instance.new("BillboardGui")
-        ageGui.Adornee = hrp
-        ageGui.Size = UDim2.new(0, 200, 0, 50)
-        ageGui.StudsOffset = Vector3.new(0, 3, 0)
-        ageGui.Parent = hrp
-
-        local ageLabel = Instance.new("TextLabel")
-        ageLabel.Size = UDim2.new(1, 0, 1, 0)
-        ageLabel.BackgroundTransparency = 1
-        ageLabel.Text = "Idade da Conta: " .. accountAge
-        ageLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-        ageLabel.TextStrokeTransparency = 0.8
-        ageLabel.Parent = ageGui
-
-        -- Create BillboardGui for display name
-        local nameGui = Instance.new("BillboardGui")
-        nameGui.Adornee = hrp
-        nameGui.Size = UDim2.new(0, 200, 0, 50)
-        nameGui.StudsOffset = Vector3.new(0, 1.5, 0)
-        nameGui.Parent = hrp
-
-        local nameLabel = Instance.new("TextLabel")
-        nameLabel.Size = UDim2.new(1, 0, 1, 0)
-        nameLabel.BackgroundTransparency = 1
-        nameLabel.Text = "Nome: " .. displayName
-        nameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-        nameLabel.TextStrokeTransparency = 0.8
-        nameLabel.Parent = nameGui
-    end
-end
-
--- Adicionar botão ESP
+-- Adicionar botão +30 Pulo
 PlayerTab:AddButton({
-    Name = "ESP",
-    Callback = function()
-        -- Apply ESP to all players currently in the game
-        for _, player in ipairs(game.Players:GetPlayers()) do
-            addEspToPlayer(player)
-        end
-
-        -- Apply ESP to new players that join the game
-        game.Players.PlayerAdded:Connect(addEspToPlayer)
-    end    
-})
-
--- Função para aumentar a saúde
-PlayerTab:AddButton({
-    Name = "+10 Saúde",
+    Name = "+30 Pulo",
     Callback = function()
         local player = game.Players.LocalPlayer
         local character = player.Character
         if character and character:FindFirstChildOfClass("Humanoid") then
             local humanoid = character:FindFirstChildOfClass("Humanoid")
-            humanoid.Health = humanoid.Health + 10
-            print("Saúde aumentada em 10.")
+            if not originalJumpPower then
+                originalJumpPower = humanoid.JumpPower
+            end
+            humanoid.JumpPower = humanoid.JumpPower + 30
+            print("Pulo aumentado em 30.")
         else
             print("Humanoide não encontrado no personagem.")
         end
     end    
 })
 
--- Função para clonar itens
+-- Adicionar botão Pulo e Velocidade Normal
 PlayerTab:AddButton({
-    Name = "Clonar Itens",
+    Name = "Pulo e Velocidade Normal",
     Callback = function()
         local player = game.Players.LocalPlayer
-        if player and player.Backpack then
-            -- Clona todos os itens no Backpack do jogador
-            for _, item in ipairs(player.Backpack:GetChildren()) do
-                if item:IsA("Tool") then
-                    -- Clona o item
-                    local clonedItem = item:Clone()
-                    clonedItem.Parent = player.Backpack
-                    print("Item " .. item.Name .. " clonado e adicionado ao inventário.")
-                end
+        local character = player.Character
+        if character and character:FindFirstChildOfClass("Humanoid") then
+            local humanoid = character:FindFirstChildOfClass("Humanoid")
+            if originalJumpPower then
+                humanoid.JumpPower = originalJumpPower
+                originalJumpPower = nil
+                print("Pulo e velocidade restaurados ao normal.")
+            else
+                print("Nenhuma alteração de pulo encontrada.")
             end
         else
-            print("Jogador não encontrado ou Backpack não disponível.")
+            print("Humanoide não encontrado no personagem.")
         end
     end    
 })
 
--- Função para adicionar Tp Tool
+-- Adicionar botão Tp Tool
 PlayerTab:AddButton({
     Name = "Tp Tool",
     Callback = function()
@@ -285,55 +216,6 @@ PlayerTab:AddButton({
         end)
 
         print("Tp Tool adicionada ao inventário.")
-    end    
-})
-
--- Função para aumentar o pulo
-local function increaseJumpPower()
-    local player = game.Players.LocalPlayer
-    local character = player.Character
-    if character and character:FindFirstChildOfClass("Humanoid") then
-        local humanoid = character:FindFirstChildOfClass("Humanoid")
-        if not originalJumpPower then
-            originalJumpPower = humanoid.JumpPower
-        end
-        humanoid.JumpPower = humanoid.JumpPower + 30
-        print("Pulo aumentado em 30.")
-    else
-        print("Humanoide não encontrado no personagem.")
-    end
-end
-
--- Função para resetar pulo e velocidade
-local function resetJumpPowerAndSpeed()
-    local player = game.Players.LocalPlayer
-    local character = player.Character
-    if character and character:FindFirstChildOfClass("Humanoid") then
-        local humanoid = character:FindFirstChildOfClass("Humanoid")
-        if originalJumpPower then
-            humanoid.JumpPower = originalJumpPower
-            originalJumpPower = nil
-            print("Pulo e velocidade resetados ao normal.")
-        else
-            print("Pulo já está no valor normal.")
-        end
-    else
-        print("Humanoide não encontrado no personagem.")
-    end
-end
-
--- Adicionar botões para aumentar pulo e resetar pulo e velocidade
-PlayerTab:AddButton({
-    Name = "+30 Pulo",
-    Callback = function()
-        increaseJumpPower()
-    end    
-})
-
-PlayerTab:AddButton({
-    Name = "Pulo e Velocidade Normal",
-    Callback = function()
-        resetJumpPowerAndSpeed()
     end    
 })
 
