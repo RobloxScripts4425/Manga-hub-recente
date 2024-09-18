@@ -5,16 +5,16 @@ local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/
 local Window = Fluent:CreateWindow({
     Name = "Manga Hub 4.2.1",
     Footer = "Fluent UI",
-    Color = Color3.fromRGB(44, 120, 224), -- Ajuste a cor que desejar
+    Color = Color3.fromRGB(44, 120, 224),
     Position = UDim2.new(0.5, -200, 0.5, -250),
     Size = UDim2.new(0, 400, 0, 500),
     CanDrag = true
 })
 
--- Função para criar abas
+-- Criar abas
 local PlayerTab = Window:CreateTab({
     Name = "Jogador",
-    Icon = "rbxassetid://4483345998" -- Ícone da aba (se necessário)
+    Icon = "rbxassetid://4483345998"
 })
 
 local TrollTab = Window:CreateTab({
@@ -22,77 +22,19 @@ local TrollTab = Window:CreateTab({
     Icon = "rbxassetid://4483345998"
 })
 
-local GameTab = Window:CreateTab({
-    Name = "Jogo",
-    Icon = "rbxassetid://4483345998"
-})
-
--- Variáveis para controle do fling e suas funções
-local flingSpeed = 900
-local flingConnection
-local playerName
-local previousPosition
-
--- Função para iniciar o fling
-local function startFling(playerIdentifier)
-    -- Função similar à do exemplo anterior, ajuste conforme necessário
-end
-
--- Função para parar o fling
-local function stopFling()
-    -- Função similar à do exemplo anterior
-end
-
--- Adicionar TextBox na aba Jogador para inserir o nome do jogador
-PlayerTab:CreateTextbox({
-    Name = "Nome do Jogador",
-    Placeholder = "Digite o nome do jogador",
-    Callback = function(value)
-        playerName = value
-    end
-})
-
--- Adicionar botão para iniciar o fling
+-- Função de exemplo para ajustar a velocidade do jogador
 PlayerTab:CreateButton({
-    Name = "Iniciar Fling",
-    Callback = function()
-        if playerName then
-            startFling(playerName)
-        else
-            print("Por favor, insira o nome do jogador.")
-        end
-    end
-})
-
--- Adicionar botão para parar o fling
-PlayerTab:CreateButton({
-    Name = "Parar Fling",
-    Callback = function()
-        stopFling()
-    end
-})
-
--- Adicionar funcionalidade Anti-Sit
-PlayerTab:CreateToggle({
-    Name = "Anti-Sit",
-    Default = false,
-    Callback = function(state)
-        -- Função Anti-Sit (já implementada no script anterior)
-    end
-})
-
--- Adicionar botões para ajustar o pulo
-PlayerTab:CreateButton({
-    Name = "+30 Pulo",
+    Name = "+30 Velocidade",
     Callback = function()
         local player = game.Players.LocalPlayer
         local character = player.Character
         if character and character:FindFirstChild("Humanoid") then
-            character.Humanoid.JumpPower = character.Humanoid.JumpPower + 30
+            character.Humanoid.WalkSpeed = character.Humanoid.WalkSpeed + 30
         end
     end
 })
 
+-- Função para restaurar velocidade e pulo
 PlayerTab:CreateButton({
     Name = "Pulo e Velocidade Normal",
     Callback = function()
@@ -105,15 +47,35 @@ PlayerTab:CreateButton({
     end
 })
 
--- Adicionar funcionalidade para abrir as configurações do jogo
-GameTab:CreateButton({
-    Name = "Config do Jogo",
+-- Função de exemplo para iniciar o Fling (básico)
+TrollTab:CreateButton({
+    Name = "Iniciar Fling",
     Callback = function()
-        -- Função para abrir configurações (simples ou avançadas)
+        -- Função simples de Fling
+        local player = game.Players.LocalPlayer
+        local character = player.Character
+        if character and character:FindFirstChild("HumanoidRootPart") then
+            while true do
+                wait(0.1)
+                character.HumanoidRootPart.Velocity = Vector3.new(900, 0, 0)
+            end
+        end
     end
 })
 
--- Adicionar funcionalidade de flutuar
+-- Parar o Fling e zerar a saúde
+TrollTab:CreateButton({
+    Name = "Parar Fling",
+    Callback = function()
+        local player = game.Players.LocalPlayer
+        local character = player.Character
+        if character and character:FindFirstChild("Humanoid") then
+            character.Humanoid.Health = 0
+        end
+    end
+})
+
+-- Adicionar toggle para flutuar
 PlayerTab:CreateToggle({
     Name = "Flutuar",
     Default = false,
@@ -123,13 +85,5 @@ PlayerTab:CreateToggle({
         if character and character:FindFirstChild("HumanoidRootPart") then
             character.HumanoidRootPart.Anchored = state
         end
-    end
-})
-
--- Adicionar botão para clonar itens
-GameTab:CreateButton({
-    Name = "Clonar Itens",
-    Callback = function()
-        -- Função de clonagem de itens
     end
 })
