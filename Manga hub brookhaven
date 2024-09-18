@@ -1,29 +1,29 @@
--- Carregar biblioteca Fluent
-local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+-- Carregar biblioteca Orion
+local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/shlexware/Orion/main/source"))()
 
--- Criar a interface principal
-local Window = Fluent:CreateWindow({
+-- Criar a janela principal
+local Window = OrionLib:MakeWindow({
     Name = "Manga Hub 4.2.1",
-    Footer = "Fluent UI",
-    Color = Color3.fromRGB(44, 120, 224),
-    Position = UDim2.new(0.5, -200, 0.5, -250),
-    Size = UDim2.new(0, 400, 0, 500),
-    CanDrag = true
+    HidePremium = false,
+    SaveConfig = true,
+    ConfigFolder = "MangaHubConfig"
 })
 
 -- Criar abas
-local PlayerTab = Window:CreateTab({
+local PlayerTab = Window:MakeTab({
     Name = "Jogador",
-    Icon = "rbxassetid://4483345998"
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
 })
 
-local TrollTab = Window:CreateTab({
+local TrollTab = Window:MakeTab({
     Name = "Troll",
-    Icon = "rbxassetid://4483345998"
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
 })
 
--- Função de exemplo para ajustar a velocidade do jogador
-PlayerTab:CreateButton({
+-- Função para aumentar a velocidade do jogador
+PlayerTab:AddButton({
     Name = "+30 Velocidade",
     Callback = function()
         local player = game.Players.LocalPlayer
@@ -34,37 +34,48 @@ PlayerTab:CreateButton({
     end
 })
 
--- Função para restaurar velocidade e pulo
-PlayerTab:CreateButton({
+-- Função para aumentar o pulo do jogador
+PlayerTab:AddButton({
+    Name = "+30 Pulo",
+    Callback = function()
+        local player = game.Players.LocalPlayer
+        local character = player.Character
+        if character and character:FindFirstChild("Humanoid") then
+            character.Humanoid.JumpPower = character.Humanoid.JumpPower + 30
+        end
+    end
+})
+
+-- Função para restaurar a velocidade e o pulo do jogador para os valores normais
+PlayerTab:AddButton({
     Name = "Pulo e Velocidade Normal",
     Callback = function()
         local player = game.Players.LocalPlayer
         local character = player.Character
         if character and character:FindFirstChild("Humanoid") then
-            character.Humanoid.JumpPower = 50 -- JumpPower padrão
-            character.Humanoid.WalkSpeed = 16 -- WalkSpeed padrão
+            character.Humanoid.JumpPower = 50 -- Pulo padrão
+            character.Humanoid.WalkSpeed = 16 -- Velocidade padrão
         end
     end
 })
 
--- Função de exemplo para iniciar o Fling (básico)
-TrollTab:CreateButton({
+-- Função para iniciar o Fling
+TrollTab:AddButton({
     Name = "Iniciar Fling",
     Callback = function()
-        -- Função simples de Fling
         local player = game.Players.LocalPlayer
         local character = player.Character
         if character and character:FindFirstChild("HumanoidRootPart") then
             while true do
                 wait(0.1)
-                character.HumanoidRootPart.Velocity = Vector3.new(900, 0, 0)
+                character.HumanoidRootPart.Velocity = Vector3.new(900, 0, 0) -- Velocidade de 900
             end
         end
     end
 })
 
--- Parar o Fling e zerar a saúde
-TrollTab:CreateButton({
+-- Função para parar o Fling e zerar a saúde do jogador
+TrollTab:AddButton({
     Name = "Parar Fling",
     Callback = function()
         local player = game.Players.LocalPlayer
@@ -76,7 +87,7 @@ TrollTab:CreateButton({
 })
 
 -- Adicionar toggle para flutuar
-PlayerTab:CreateToggle({
+PlayerTab:AddToggle({
     Name = "Flutuar",
     Default = false,
     Callback = function(state)
@@ -87,3 +98,20 @@ PlayerTab:CreateToggle({
         end
     end
 })
+
+-- Criar aba "Jogo" e botão "Config do jogo"
+local GameTab = Window:MakeTab({
+    Name = "Jogo",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+GameTab:AddButton({
+    Name = "Config do jogo",
+    Callback = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))()
+    end
+})
+
+-- Inicializar a GUI
+OrionLib:Init()
