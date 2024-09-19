@@ -67,22 +67,24 @@ FlingTab:AddButton({
             local flingSpeed = 1999 -- Velocidade do fling
             local character = game.Players.LocalPlayer.Character
             local hrp = character:FindFirstChild("HumanoidRootPart")
-
+            
             if hrp and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                -- Lógica de teleporte para frente e atrás do jogador, ajustada para seguir o movimento
                 local targetHRP = targetPlayer.Character.HumanoidRootPart
-                local function flingMovement()
+
+                -- Função para aplicar força ao jogador alvo
+                local function applyFling()
                     while true do
                         if (character.Humanoid.Health > 0 and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart")) then
-                            -- Teleporta alternadamente para a frente e atrás do jogador alvo
-                            hrp.CFrame = targetHRP.CFrame * CFrame.new(0, 0, -2) -- Atrás
-                            hrp.CFrame = targetHRP.CFrame * CFrame.new(0, 0, 2) -- Na frente
+                            -- Aplicar força alternadamente
+                            targetHRP.Velocity = (targetHRP.Position - hrp.Position).unit * flingSpeed
+                            wait(0.01) -- Intervalo de tempo para atualizar a posição
                         else
                             break
                         end
                     end
                 end
-                flingMovement()
+
+                applyFling()
             end
         else
             print("Jogador não encontrado")
