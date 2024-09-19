@@ -1,5 +1,5 @@
 local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
-local Window = OrionLib:MakeWindow({Name = "Manga Hub 4.2.2", HidePremium = false, SaveConfig = true, ConfigFolder = "MangaHub"})
+local Window = OrionLib:MakeWindow({Name = "Manga Hub 4.2.1", HidePremium = false, SaveConfig = true, ConfigFolder = "MangaHub"})
 
 -- Aba "Jogador"
 local PlayerTab = Window:MakeTab({
@@ -46,7 +46,7 @@ FlingTab:AddTextbox({
     Default = "",
     TextDisappear = true,
     Callback = function(Value)
-        PlayerName = Value
+        PlayerName = string.lower(Value)  -- Convertendo o nome para minúsculas para evitar problemas de case sensitivity
     end    
 })
 
@@ -54,9 +54,18 @@ FlingTab:AddTextbox({
 FlingTab:AddButton({
     Name = "Ativar Fling",
     Callback = function()
-        local targetPlayer = game.Players:FindFirstChild(PlayerName)
+        local targetPlayer = nil
+        -- Procurar o jogador com base no nome, independente de maiúsculas/minúsculas
+        for _, player in pairs(game.Players:GetPlayers()) do
+            if string.lower(player.Name) == PlayerName or string.lower(player.DisplayName) == PlayerName then
+                targetPlayer = player
+                break
+            end
+        end
+
         if targetPlayer then
-            local flingSpeed = 900 -- Velocidade do fling
+            local flingSpeed = 1999 -- Velocidade do fling
+            local teleportDelay = 740 / 1000 -- Tempo de teleporte convertido para segundos
             local character = game.Players.LocalPlayer.Character
             local hrp = character:FindFirstChild("HumanoidRootPart")
 
@@ -64,7 +73,7 @@ FlingTab:AddButton({
                 -- Lógica de teleporte para frente e atrás do jogador, ajustada para seguir o movimento
                 local targetHRP = targetPlayer.Character.HumanoidRootPart
                 local function flingMovement()
-                    while wait(0.1) do
+                    while wait(teleportDelay) do
                         if (character.Humanoid.Health > 0 and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart")) then
                             -- Teleporta alternadamente para a frente e atrás do jogador alvo
                             hrp.CFrame = targetHRP.CFrame * CFrame.new(0, 0, -2) -- Atrás
