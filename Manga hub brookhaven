@@ -50,7 +50,7 @@ FlingTab:AddTextbox({
     end    
 })
 
--- Função para ativar o fling no jogador especificado
+-- Função de Fling ajustada
 FlingTab:AddButton({
     Name = "Ativar Fling",
     Callback = function()
@@ -60,12 +60,22 @@ FlingTab:AddButton({
             local character = game.Players.LocalPlayer.Character
             local hrp = character:FindFirstChild("HumanoidRootPart")
 
-            -- Lógica de fling
-            if hrp then
-                hrp.CFrame = targetPlayer.Character.HumanoidRootPart.CFrame
-                while wait(0.1) do
-                    hrp.Velocity = (targetPlayer.Character.HumanoidRootPart.Position - hrp.Position).unit * flingSpeed
+            if hrp and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                -- Lógica de teleporte para frente e atrás do jogador, ajustada para seguir o movimento
+                local targetHRP = targetPlayer.Character.HumanoidRootPart
+                local function flingMovement()
+                    while wait(0.1) do
+                        if (character.Humanoid.Health > 0 and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart")) then
+                            -- Teleporta alternadamente para a frente e atrás do jogador alvo
+                            hrp.CFrame = targetHRP.CFrame * CFrame.new(0, 0, -2) -- Atrás
+                            wait(0.05)
+                            hrp.CFrame = targetHRP.CFrame * CFrame.new(0, 0, 2) -- Na frente
+                        else
+                            break
+                        end
+                    end
                 end
+                flingMovement()
             end
         else
             print("Jogador não encontrado")
