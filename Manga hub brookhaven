@@ -1,117 +1,100 @@
--- Carregar biblioteca Orion
-local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/shlexware/Orion/main/source"))()
+local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
+local Window = OrionLib:MakeWindow({Name = "Manga Hub 4.2.1", HidePremium = false, SaveConfig = true, ConfigFolder = "MangaHub"})
 
--- Criar a janela principal
-local Window = OrionLib:MakeWindow({
-    Name = "Manga Hub 4.2.1",
-    HidePremium = false,
-    SaveConfig = true,
-    ConfigFolder = "MangaHubConfig"
-})
-
--- Criar abas
+-- Aba "Jogador"
 local PlayerTab = Window:MakeTab({
     Name = "Jogador",
     Icon = "rbxassetid://4483345998",
     PremiumOnly = false
 })
 
-local TrollTab = Window:MakeTab({
+-- Botão +30 Velocidade
+PlayerTab:AddButton({
+    Name = "+30 Velocidade",
+    Callback = function()
+        game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = game.Players.LocalPlayer.Character.Humanoid.WalkSpeed + 30
+    end    
+})
+
+-- Botão +30 Pulo
+PlayerTab:AddButton({
+    Name = "+30 Pulo",
+    Callback = function()
+        game.Players.LocalPlayer.Character.Humanoid.JumpPower = game.Players.LocalPlayer.Character.Humanoid.JumpPower + 30
+    end    
+})
+
+-- Botão Pulo e Velocidade Normal
+PlayerTab:AddButton({
+    Name = "Pulo e Velocidade Normal",
+    Callback = function()
+        game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 16
+        game.Players.LocalPlayer.Character.Humanoid.JumpPower = 50
+    end    
+})
+
+-- Aba "Troll" para Fling
+local FlingTab = Window:MakeTab({
     Name = "Troll",
     Icon = "rbxassetid://4483345998",
     PremiumOnly = false
 })
 
--- Função para aumentar a velocidade do jogador
-PlayerTab:AddButton({
-    Name = "+30 Velocidade",
-    Callback = function()
-        local player = game.Players.LocalPlayer
-        local character = player.Character
-        if character and character:FindFirstChild("Humanoid") then
-            character.Humanoid.WalkSpeed = character.Humanoid.WalkSpeed + 30
-        end
-    end
+local PlayerName
+FlingTab:AddTextbox({
+    Name = "Nome do Jogador",
+    Default = "",
+    TextDisappear = true,
+    Callback = function(Value)
+        PlayerName = Value
+    end    
 })
 
--- Função para aumentar o pulo do jogador
-PlayerTab:AddButton({
-    Name = "+30 Pulo",
+-- Função para ativar o fling no jogador especificado
+FlingTab:AddButton({
+    Name = "Ativar Fling",
     Callback = function()
-        local player = game.Players.LocalPlayer
-        local character = player.Character
-        if character and character:FindFirstChild("Humanoid") then
-            character.Humanoid.JumpPower = character.Humanoid.JumpPower + 30
-        end
-    end
-})
+        local targetPlayer = game.Players:FindFirstChild(PlayerName)
+        if targetPlayer then
+            local flingSpeed = 900 -- Velocidade do fling
+            local character = game.Players.LocalPlayer.Character
+            local hrp = character:FindFirstChild("HumanoidRootPart")
 
--- Função para restaurar a velocidade e o pulo do jogador para os valores normais
-PlayerTab:AddButton({
-    Name = "Pulo e Velocidade Normal",
-    Callback = function()
-        local player = game.Players.LocalPlayer
-        local character = player.Character
-        if character and character:FindFirstChild("Humanoid") then
-            character.Humanoid.JumpPower = 50 -- Pulo padrão
-            character.Humanoid.WalkSpeed = 16 -- Velocidade padrão
-        end
-    end
-})
-
--- Função para iniciar o Fling
-TrollTab:AddButton({
-    Name = "Iniciar Fling",
-    Callback = function()
-        local player = game.Players.LocalPlayer
-        local character = player.Character
-        if character and character:FindFirstChild("HumanoidRootPart") then
-            while true do
-                wait(0.1)
-                character.HumanoidRootPart.Velocity = Vector3.new(900, 0, 0) -- Velocidade de 900
+            -- Lógica de fling
+            if hrp then
+                hrp.CFrame = targetPlayer.Character.HumanoidRootPart.CFrame
+                while wait(0.1) do
+                    hrp.Velocity = (targetPlayer.Character.HumanoidRootPart.Position - hrp.Position).unit * flingSpeed
+                end
             end
+        else
+            print("Jogador não encontrado")
         end
-    end
+    end    
 })
 
--- Função para parar o Fling e zerar a saúde do jogador
-TrollTab:AddButton({
+-- Função para desativar o fling e zerar a saúde do jogador
+FlingTab:AddButton({
     Name = "Parar Fling",
     Callback = function()
-        local player = game.Players.LocalPlayer
-        local character = player.Character
-        if character and character:FindFirstChild("Humanoid") then
-            character.Humanoid.Health = 0
-        end
-    end
+        game.Players.LocalPlayer.Character.Humanoid.Health = 0
+    end    
 })
 
--- Adicionar toggle para flutuar
-PlayerTab:AddToggle({
-    Name = "Flutuar",
-    Default = false,
-    Callback = function(state)
-        local player = game.Players.LocalPlayer
-        local character = player.Character
-        if character and character:FindFirstChild("HumanoidRootPart") then
-            character.HumanoidRootPart.Anchored = state
-        end
-    end
-})
-
--- Criar aba "Jogo" e botão "Config do jogo"
+-- Aba "Jogo" para abrir configurações do jogo (similar ao Dex)
 local GameTab = Window:MakeTab({
     Name = "Jogo",
     Icon = "rbxassetid://4483345998",
     PremiumOnly = false
 })
 
+-- Botão para abrir as configurações do jogo
 GameTab:AddButton({
-    Name = "Config do jogo",
+    Name = "Config do Jogo",
     Callback = function()
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))()
-    end
+        -- Carregando o Dex Explorer para abrir configurações do jogo
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/peyton2465/Dex/master/out.lua"))()
+    end    
 })
 
--- Inicializar a GUI
 OrionLib:Init()
