@@ -55,9 +55,11 @@ FlingTab:AddButton({
     Name = "Ativar Fling",
     Callback = function()
         local targetPlayer = nil
-        -- Procurar o jogador com base no nome, independente de maiúsculas/minúsculas
+        -- Procurar o jogador com base no início do nome, nick de exibição e nick real
         for _, player in pairs(game.Players:GetPlayers()) do
-            if string.lower(player.Name) == PlayerName or string.lower(player.DisplayName) == PlayerName then
+            local realName = string.lower(player.Name)
+            local displayName = string.lower(player.DisplayName)
+            if realName:sub(1, #PlayerName) == PlayerName or displayName:sub(1, #PlayerName) == PlayerName then
                 targetPlayer = player
                 break
             end
