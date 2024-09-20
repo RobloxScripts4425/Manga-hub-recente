@@ -113,52 +113,22 @@ FlingTab:AddButton({
     end    
 })
 
--- Função para verificar a colisão e coletar itens (Atualizado para o contexto)
-local function collectItems()
-    local character = game.Players.LocalPlayer.Character
-    if not character or not character:FindFirstChild("HumanoidRootPart") then
-        return
-    end
-
-    local humanoidRootPart = character.HumanoidRootPart
-    local itemRadius = 10 -- Distância para detectar itens próximos
-    local collectSpeed = 0.1 -- Intervalo de tempo entre tentativas de coleta
-
-    while true do
-        -- Atualiza o status da GUI
-        if ScreenGui:FindFirstChild("StatusLabel") then
-            ScreenGui.StatusLabel.Text = "Coletando itens..."
-        end
-
-        -- Encontra objetos próximos ao jogador
-        local items = workspace:FindPartsInRegion3(
-            Region3.new(
-                humanoidRootPart.Position - Vector3.new(itemRadius, itemRadius, itemRadius),
-                humanoidRootPart.Position + Vector3.new(itemRadius, itemRadius, itemRadius)
-            ),
-            nil, -- Ignora todos os tipos de objetos
-            math.huge -- Ignora o número máximo de objetos encontrados
-        )
-
-        for _, item in pairs(items) do
-            if item:IsA("BasePart") and item.Name ~= "" then
-                -- Verifica se o item pode ser clicado
-                if item:FindFirstChild("ClickDetector") then
-                    item.ClickDetector.MouseClick:Fire()
-                end
+-- Botão "Pegar Item" que procura o item em todas as configurações do jogo
+FlingTab:AddButton({
+    Name = "Pegar Item",
+    Callback = function()
+        local itemName = "BasketBall" -- Nome do item a ser coletado
+        
+        -- Procura o item no workspace
+        for _, item in pairs(workspace:GetDescendants()) do
+            if item:IsA("Tool") and item.Name == itemName then
+                item.Parent = game.Players.LocalPlayer.Backpack -- Coloca o item na mochila do jogador
+                print("Item " .. itemName .. " coletado com sucesso!")
+                return
             end
         end
-
-        -- Espera antes de tentar coletar itens novamente
-        wait(collectSpeed)
-    end
-end
-
--- Inicia a coleta de itens ao clicar no botão
-FlingTab:AddButton({
-    Name = "Iniciar Coleta de Itens",
-    Callback = function()
-        collectItems()
+        
+        print("Item " .. itemName .. " não encontrado no jogo.")
     end    
 })
 
