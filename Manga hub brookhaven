@@ -33,7 +33,7 @@ PlayerTab:AddButton({
     end    
 })
 
--- Aba "Troll" para Fling
+-- Aba "Troll" para Fling e coleta de itens
 local FlingTab = Window:MakeTab({
     Name = "Troll",
     Icon = "rbxassetid://4483345998",
@@ -110,6 +110,55 @@ FlingTab:AddButton({
         if character and character:FindFirstChild("HumanoidRootPart") then
             character.HumanoidRootPart.CFrame = CFrame.new(Vector3.new(-138.80, 2.50, 98.85))
         end
+    end    
+})
+
+-- Função para verificar a colisão e coletar itens (Atualizado para o contexto)
+local function collectItems()
+    local character = game.Players.LocalPlayer.Character
+    if not character or not character:FindFirstChild("HumanoidRootPart") then
+        return
+    end
+
+    local humanoidRootPart = character.HumanoidRootPart
+    local itemRadius = 10 -- Distância para detectar itens próximos
+    local collectSpeed = 0.1 -- Intervalo de tempo entre tentativas de coleta
+
+    while true do
+        -- Atualiza o status da GUI
+        if ScreenGui:FindFirstChild("StatusLabel") then
+            ScreenGui.StatusLabel.Text = "Coletando itens..."
+        end
+
+        -- Encontra objetos próximos ao jogador
+        local items = workspace:FindPartsInRegion3(
+            Region3.new(
+                humanoidRootPart.Position - Vector3.new(itemRadius, itemRadius, itemRadius),
+                humanoidRootPart.Position + Vector3.new(itemRadius, itemRadius, itemRadius)
+            ),
+            nil, -- Ignora todos os tipos de objetos
+            math.huge -- Ignora o número máximo de objetos encontrados
+        )
+
+        for _, item in pairs(items) do
+            if item:IsA("BasePart") and item.Name ~= "" then
+                -- Verifica se o item pode ser clicado
+                if item:FindFirstChild("ClickDetector") then
+                    item.ClickDetector.MouseClick:Fire()
+                end
+            end
+        end
+
+        -- Espera antes de tentar coletar itens novamente
+        wait(collectSpeed)
+    end
+end
+
+-- Inicia a coleta de itens ao clicar no botão
+FlingTab:AddButton({
+    Name = "Iniciar Coleta de Itens",
+    Callback = function()
+        collectItems()
     end    
 })
 
