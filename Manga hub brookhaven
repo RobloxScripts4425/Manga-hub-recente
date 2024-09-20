@@ -102,6 +102,17 @@ FlingTab:AddButton({
     end    
 })
 
+-- Botão "Pegar basketball" na aba "Troll"
+FlingTab:AddButton({
+    Name = "Pegar basketball",
+    Callback = function()
+        local character = game.Players.LocalPlayer.Character
+        if character and character:FindFirstChild("HumanoidRootPart") then
+            character.HumanoidRootPart.CFrame = CFrame.new(Vector3.new(-138.80, 2.50, 98.85))
+        end
+    end    
+})
+
 -- Aba "Jogo" para abrir configurações do jogo (similar ao Dex)
 local GameTab = Window:MakeTab({
     Name = "Jogo",
