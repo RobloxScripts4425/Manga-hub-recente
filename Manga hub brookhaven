@@ -1,5 +1,10 @@
 local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
-local Window = OrionLib:MakeWindow({Name = "Manga Hub 4.2.1", HidePremium = false, SaveConfig = true, ConfigFolder = "MangaHub"})
+local Window = OrionLib:MakeWindow({
+    Name = "Manga Hub 4.2.1",
+    HidePremium = false,
+    SaveConfig = true,
+    ConfigFolder = "MangaHub"
+})
 
 -- Aba "Jogador"
 local PlayerTab = Window:MakeTab({
@@ -33,7 +38,7 @@ PlayerTab:AddButton({
     end    
 })
 
--- Aba "Troll" para Fling e coleta de itens
+-- Aba "Troll" para Fling
 local FlingTab = Window:MakeTab({
     Name = "Troll",
     Icon = "rbxassetid://4483345998",
@@ -46,7 +51,7 @@ FlingTab:AddTextbox({
     Default = "",
     TextDisappear = true,
     Callback = function(Value)
-        PlayerName = string.lower(Value)  -- Convertendo o nome para minúsculas para evitar problemas de case sensitivity
+        PlayerName = string.lower(Value)
     end    
 })
 
@@ -55,10 +60,11 @@ FlingTab:AddButton({
     Name = "Ativar Fling",
     Callback = function()
         local targetPlayer = nil
-        -- Procurar o jogador com base no início do nome, nick de exibição e nick real
         for _, player in pairs(game.Players:GetPlayers()) do
             local realName = string.lower(player.Name)
             local displayName = string.lower(player.DisplayName)
+
+            -- Verifica se o nome real ou o nome de exibição começa com o que foi digitado
             if realName:sub(1, #PlayerName) == PlayerName or displayName:sub(1, #PlayerName) == PlayerName then
                 targetPlayer = player
                 break
@@ -66,20 +72,18 @@ FlingTab:AddButton({
         end
 
         if targetPlayer then
-            local flingSpeed = 1999 -- Velocidade do fling
+            local flingSpeed = 1999
             local character = game.Players.LocalPlayer.Character
             local hrp = character:FindFirstChild("HumanoidRootPart")
             
             if hrp and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
                 local targetHRP = targetPlayer.Character.HumanoidRootPart
 
-                -- Função para aplicar força ao jogador alvo
                 local function applyFling()
                     while true do
                         if (character.Humanoid.Health > 0 and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart")) then
-                            -- Aplicar força alternadamente
                             targetHRP.Velocity = (targetHRP.Position - hrp.Position).unit * flingSpeed
-                            wait(0.01) -- Intervalo de tempo para atualizar a posição
+                            wait(0.01)
                         else
                             break
                         end
@@ -94,7 +98,6 @@ FlingTab:AddButton({
     end    
 })
 
--- Função para desativar o fling e zerar a saúde do jogador
 FlingTab:AddButton({
     Name = "Parar Fling",
     Callback = function()
@@ -102,48 +105,16 @@ FlingTab:AddButton({
     end    
 })
 
--- Botão "Pegar basketball" na aba "Troll"
-FlingTab:AddButton({
-    Name = "Pegar basketball",
-    Callback = function()
-        local character = game.Players.LocalPlayer.Character
-        if character and character:FindFirstChild("HumanoidRootPart") then
-            character.HumanoidRootPart.CFrame = CFrame.new(Vector3.new(-138.80, 2.50, 98.85))
-        end
-    end    
-})
-
--- Botão "Pegar Item" que procura o item em todas as configurações do jogo
-FlingTab:AddButton({
-    Name = "Pegar Item",
-    Callback = function()
-        local itemName = "BasketBall" -- Nome do item a ser coletado
-        
-        -- Procura o item no workspace
-        for _, item in pairs(workspace:GetDescendants()) do
-            if item:IsA("Tool") and item.Name == itemName then
-                item.Parent = game.Players.LocalPlayer.Backpack -- Coloca o item na mochila do jogador
-                print("Item " .. itemName .. " coletado com sucesso!")
-                return
-            end
-        end
-        
-        print("Item " .. itemName .. " não encontrado no jogo.")
-    end    
-})
-
--- Aba "Jogo" para abrir configurações do jogo (similar ao Dex)
+-- Aba "Jogo" para abrir configurações do jogo
 local GameTab = Window:MakeTab({
     Name = "Jogo",
     Icon = "rbxassetid://4483345998",
     PremiumOnly = false
 })
 
--- Botão para abrir as configurações do jogo
 GameTab:AddButton({
     Name = "Config do Jogo",
     Callback = function()
-        -- Carregando o Dex Explorer para abrir configurações do jogo
         loadstring(game:HttpGet("https://raw.githubusercontent.com/peyton2465/Dex/master/out.lua"))()
     end    
 })
