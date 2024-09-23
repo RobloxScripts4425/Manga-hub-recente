@@ -146,22 +146,28 @@ AudioTab:AddButton({
         end)
 
         if success then
-            -- Soltar o áudio no Sniper
-            local sniper = game.Players.LocalPlayer:FindFirstChild("Sniper")
+            -- Equipar o Sniper
+            local backpack = game.Players.LocalPlayer.Backpack
+            local sniper = backpack:FindFirstChild("Sniper")
+
             if sniper then
+                -- Equipar o Sniper
+                sniper.Parent = game.Players.LocalPlayer.Character
+
+                -- Soltar o áudio no Sniper
                 local sound = Instance.new("Sound", sniper)
                 sound.SoundId = "rbxassetid://" .. audioID
                 sound:Play()
 
                 game.StarterGui:SetCore("SendNotification", {
                     Title = "Sucesso!",
-                    Text = "Você pegou o Sniper e ativou o áudio!",
+                    Text = "Você pegou e equipou o Sniper e ativou o áudio!",
                     Duration = 5,
                 })
             else
                 game.StarterGui:SetCore("SendNotification", {
                     Title = "Erro!",
-                    Text = "Não foi possível encontrar o Sniper.",
+                    Text = "Não foi possível encontrar o Sniper no seu inventário.",
                     Duration = 5,
                 })
             end
