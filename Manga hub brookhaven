@@ -94,7 +94,7 @@ FlingTab:AddButton({
             
             if hrp and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
                 local targetHRP = targetPlayer.Character.HumanoidRootPart
-                local flingSpeed = 1593
+                local flingSpeed = 5000 -- Velocidade muito alta para um fling forte
 
                 -- Ajusta a velocidade
                 character.Humanoid.WalkSpeed = flingSpeed
