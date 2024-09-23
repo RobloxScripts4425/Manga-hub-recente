@@ -1,6 +1,23 @@
 local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
 local Window = OrionLib:MakeWindow({Name = "Manga Hub 4.2.1", HidePremium = false, SaveConfig = true, ConfigFolder = "MangaHub"})
 
+-- Criar RemoteEvent para reprodução de áudio
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local audioRemote = Instance.new("RemoteEvent")
+audioRemote.Name = "PlayAudio"
+audioRemote.Parent = ReplicatedStorage
+
+-- Função para tocar o áudio no servidor
+audioRemote.OnServerEvent:Connect(function(player, soundId)
+    local audio = Instance.new("Sound")
+    audio.SoundId = "rbxassetid://" .. soundId
+    audio.Parent = game.Workspace
+
+    audio:Play() -- Tocar o áudio
+    wait(3) -- Esperar 3 segundos
+    audio:Destroy() -- Remover o áudio após tocar
+end)
+
 -- Aba "Audio"
 local AudioTab = Window:MakeTab({
     Name = "Audio",
@@ -44,17 +61,9 @@ AudioTab:AddButton({
                 sniper.Parent = player.Character -- Equipar a Sniper
                 wait(0.1) -- Pequeno delay para garantir que o item esteja equipado
 
-                -- Criar um objeto de áudio e configurar
-                local audio = Instance.new("Sound")
-                audio.SoundId = "rbxassetid://" .. audioId
-                audio.Parent = sniper -- Colocar o áudio na Sniper
-                audio:Play()
+                -- Tocar o áudio usando RemoteEvent
+                audioRemote:FireServer(audioId)
 
-                -- Deixar o áudio FE
-                audio.OnFinished:Connect(function()
-                    audio:Destroy() -- Remover o áudio após tocar
-                end)
-                
                 -- Notificação de sucesso
                 OrionLib:Notify("Sucesso!", "Áudio ativado e Sniper equipada.", 5)
             else
