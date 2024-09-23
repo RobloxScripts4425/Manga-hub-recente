@@ -15,6 +15,9 @@ local function notify(title, content)
     })
 end
 
+-- Notificação de emblema quando o script é executado
+notify("Atenção", "O script está em beta, os bugs do script serão resolvidos em breve.")
+
 -- Aba "Jogador"
 local PlayerTab = Window:MakeTab({
     Name = "Jogador",
@@ -87,35 +90,25 @@ FlingTab:AddButton({
             end
         end
 
-        if targetPlayer then
+        if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
             local flingSpeed = 1999
             local character = game.Players.LocalPlayer.Character
             local hrp = character:FindFirstChild("HumanoidRootPart")
-            
-            if hrp and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                local targetHRP = targetPlayer.Character.HumanoidRootPart
+            local targetHRP = targetPlayer.Character.HumanoidRootPart
 
-                -- Limpeza de movimento anterior
-                targetHRP.Velocity = Vector3.new(0, 0, 0)
+            notify("Sucesso", "Fling ativado para: " .. targetPlayer.Name)
 
-                local function applyFling()
-                    while targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") do
-                        if character.Humanoid.Health > 0 then
-                            targetHRP.Velocity = (targetHRP.Position - hrp.Position).unit * flingSpeed
-                            wait(0.01)
-                        else
-                            break
-                        end
-                    end
+            -- Loop de fling
+            while targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") do
+                if character and character:FindFirstChild("Humanoid") and character.Humanoid.Health > 0 then
+                    targetHRP.Velocity = (targetHRP.Position - hrp.Position).unit * flingSpeed
+                    wait(0.01)
+                else
+                    break
                 end
-
-                applyFling()
-                notify("Sucesso", "Fling ativado para: " .. targetPlayer.Name)
-            else
-                notify("Erro", "HumanoidRootPart do alvo não encontrado.")
             end
         else
-            notify("Erro", "Jogador não encontrado.")
+            notify("Erro", "Jogador não encontrado ou não está na partida.")
         end
     end    
 })
