@@ -72,16 +72,22 @@ FlingTab:AddButton({
             if hrp and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
                 local targetHRP = targetPlayer.Character.HumanoidRootPart
 
-                while true do
-                    if character.Humanoid.Health > 0 and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                        hrp.Position = targetHRP.Position + Vector3.new(0, 0, -2) -- Teleporta nas costas do jogador
-                        wait(0.0003) -- Aguarda 0.3 milissegundos
-                        hrp.Position = targetHRP.Position + Vector3.new(0, 0, 2) -- Teleporta na frente do jogador
-                        wait(0.0003) -- Aguarda 0.3 milissegundos
-                    else
-                        break
+                local function applyFling()
+                    while true do
+                        if (character.Humanoid.Health > 0 and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart")) then
+                            local offset = (targetHRP.Position - hrp.Position).unit * 3 -- Define a distância que você deseja se mover em relação ao jogador
+                            hrp.CFrame = targetHRP.CFrame * CFrame.new(0, 0, -2) -- Teleporte para as costas do jogador
+                            hrp.Velocity = (targetHRP.Position - hrp.Position).unit * flingSpeed -- Aplica a velocidade de fling
+                            wait(0.3) -- Espera 0.3 milissegundos
+                            hrp.CFrame = targetHRP.CFrame * CFrame.new(0, 0, 2) -- Teleporte para a frente do jogador
+                            wait(0.3) -- Espera 0.3 milissegundos
+                        else
+                            break
+                        end
                     end
                 end
+
+                applyFling()
             end
         else
             print("Jogador não encontrado")
@@ -128,20 +134,6 @@ AudioTab:AddButton({
         else
             print("Por favor, insira um ID de áudio válido.")
         end
-    end    
-})
-
--- Aba "Jogo" para abrir configurações do jogo
-local GameTab = Window:MakeTab({
-    Name = "Jogo",
-    Icon = "rbxassetid://4483345998",
-    PremiumOnly = false
-})
-
-GameTab:AddButton({
-    Name = "Config do Jogo",
-    Callback = function()
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/peyton2465/Dex/master/out.lua"))()
     end    
 })
 
