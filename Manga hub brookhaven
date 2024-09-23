@@ -1,173 +1,69 @@
 local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
 local Window = OrionLib:MakeWindow({Name = "Manga Hub 4.2.1", HidePremium = false, SaveConfig = true, ConfigFolder = "MangaHub"})
 
--- Aba "Jogador"
-local PlayerTab = Window:MakeTab({
-    Name = "Jogador",
-    Icon = "rbxassetid://4483345998",
-    PremiumOnly = false
-})
-
--- Botão +30 Velocidade
-PlayerTab:AddButton({
-    Name = "+30 Velocidade",
-    Callback = function()
-        game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = game.Players.LocalPlayer.Character.Humanoid.WalkSpeed + 30
-    end    
-})
-
--- Botão +30 Pulo
-PlayerTab:AddButton({
-    Name = "+30 Pulo",
-    Callback = function()
-        game.Players.LocalPlayer.Character.Humanoid.JumpPower = game.Players.LocalPlayer.Character.Humanoid.JumpPower + 30
-    end    
-})
-
--- Botão Pulo e Velocidade Normal
-PlayerTab:AddButton({
-    Name = "Pulo e Velocidade Normal",
-    Callback = function()
-        game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 16
-        game.Players.LocalPlayer.Character.Humanoid.JumpPower = 50
-    end    
-})
-
--- Aba "Troll" para Fling
-local FlingTab = Window:MakeTab({
-    Name = "Troll",
-    Icon = "rbxassetid://4483345998",
-    PremiumOnly = false
-})
-
-local PlayerName
-FlingTab:AddTextbox({
-    Name = "Nome do Jogador",
-    Default = "",
-    TextDisappear = true,
-    Callback = function(Value)
-        PlayerName = string.lower(Value)
-    end    
-})
-
--- Função de Fling ajustada
-FlingTab:AddButton({
-    Name = "Ativar Fling",
-    Callback = function()
-        local targetPlayer = nil
-        for _, player in pairs(game.Players:GetPlayers()) do
-            local realName = string.lower(player.Name)
-            local displayName = string.lower(player.DisplayName)
-            if realName:sub(1, #PlayerName) == PlayerName or displayName:sub(1, #PlayerName) == PlayerName then
-                targetPlayer = player
-                break
-            end
-        end
-
-        if targetPlayer then
-            local flingSpeed = 1999
-            local character = game.Players.LocalPlayer.Character
-            local hrp = character:FindFirstChild("HumanoidRootPart")
-            
-            if hrp and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                local targetHRP = targetPlayer.Character.HumanoidRootPart
-
-                local function applyFling()
-                    while true do
-                        if (character.Humanoid.Health > 0 and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart")) then
-                            targetHRP.Velocity = (targetHRP.Position - hrp.Position).unit * flingSpeed
-                            wait(0.01)
-                        else
-                            break
-                        end
-                    end
-                end
-
-                applyFling()
-            end
-        else
-            print("Jogador não encontrado")
-        end
-    end    
-})
-
-FlingTab:AddButton({
-    Name = "Parar Fling",
-    Callback = function()
-        game.Players.LocalPlayer.Character.Humanoid.Health = 0
-    end    
-})
-
--- Aba "Áudio"
+-- Aba "Audio"
 local AudioTab = Window:MakeTab({
-    Name = "Áudio",
+    Name = "Audio",
     Icon = "rbxassetid://4483345998",
     PremiumOnly = false
 })
 
-local audioID
+-- Textbox para o ID do áudio
+local audioId
 AudioTab:AddTextbox({
-    Name = "ID do Áudio",
+    Name = "ID do Audio",
     Default = "",
     TextDisappear = true,
     Callback = function(Value)
-        audioID = Value
+        audioId = Value
     end    
 })
 
+-- Botão para ativar o áudio e pegar a Sniper
 AudioTab:AddButton({
-    Name = "Ativar Áudio",
+    Name = "Ativar Audio",
     Callback = function()
-        -- Pegar o Sniper
+        -- Pegar a Sniper
         local args = {
             [1] = "PickingTools",
             [2] = "Sniper"
         }
 
-        local success, errorMessage = pcall(function()
+        local success, errorMsg = pcall(function()
             game:GetService("ReplicatedStorage").RE:FindFirstChild("1Too1l"):InvokeServer(unpack(args))
         end)
 
         if success then
-            -- Aguardar um pequeno atraso para o item ser adicionado ao inventário
-            wait(0.1)
+            -- Equipar a Sniper
+            local player = game.Players.LocalPlayer
+            local backpack = player.Backpack
 
-            -- Equipar o Sniper
-            local backpack = game.Players.LocalPlayer.Backpack
+            -- Verificar se a Sniper foi adicionada ao inventário
             local sniper = backpack:FindFirstChild("Sniper")
-
             if sniper then
-                -- Equipar o Sniper
-                sniper.Parent = game.Players.LocalPlayer.Character
+                sniper.Parent = player.Character -- Equipar a Sniper
+                wait(0.1) -- Pequeno delay para garantir que o item esteja equipado
 
-                -- Soltar o áudio a partir do Sniper
-                local sound = Instance.new("Sound")
-                sound.SoundId = "rbxassetid://" .. audioID
-                sound.Parent = sniper
-                sound:Play()
+                -- Criar um objeto de áudio e configurar
+                local audio = Instance.new("Sound")
+                audio.SoundId = "rbxassetid://" .. audioId
+                audio.Parent = sniper -- Colocar o áudio na Sniper
+                audio:Play()
 
+                -- Deixar o áudio FE
+                audio.OnFinished:Connect(function()
+                    audio:Destroy() -- Remover o áudio após tocar
+                end)
+                
                 -- Notificação de sucesso
-                game.StarterGui:SetCore("SendNotification", {
-                    Title = "Sucesso!",
-                    Text = "Você pegou e equipou o Sniper e ativou o áudio!",
-                    Duration = 5,
-                })
+                OrionLib:Notify("Sucesso!", "Áudio ativado e Sniper equipada.", 5)
             else
-                game.StarterGui:SetCore("SendNotification", {
-                    Title = "Erro!",
-                    Text = "Não foi possível encontrar o Sniper no seu inventário.",
-                    Duration = 5,
-                })
+                OrionLib:Notify("Erro!", "Sniper não encontrada no inventário.", 5)
             end
         else
-            game.StarterGui:SetCore("SendNotification", {
-                Title = "Erro!",
-                Text = "Não foi possível pegar o Sniper: " .. errorMessage,
-                Duration = 5,
-            })
+            OrionLib:Notify("Erro!", "Não foi possível pegar a Sniper: " .. errorMsg, 5)
         end
     end    
 })
 
--- Inicializar a biblioteca
 OrionLib:Init()
