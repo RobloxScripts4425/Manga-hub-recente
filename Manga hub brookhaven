@@ -74,7 +74,7 @@ FlingTab:AddTextbox({
     end    
 })
 
--- Função de Fling ajustada
+-- Função de Fling ajustada com teleporte
 FlingTab:AddButton({
     Name = "Ativar Fling",
     Callback = function()
@@ -82,33 +82,40 @@ FlingTab:AddButton({
         for _, player in pairs(game.Players:GetPlayers()) do
             local realName = string.lower(player.Name)
             local displayName = string.lower(player.DisplayName)
-
-            -- Verifica se o nome real ou o nome de exibição começa com o que foi digitado
             if realName:sub(1, #PlayerName) == PlayerName or displayName:sub(1, #PlayerName) == PlayerName then
                 targetPlayer = player
                 break
             end
         end
 
-        if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
-            local flingSpeed = 1999
+        if targetPlayer then
             local character = game.Players.LocalPlayer.Character
             local hrp = character:FindFirstChild("HumanoidRootPart")
-            local targetHRP = targetPlayer.Character.HumanoidRootPart
+            
+            if hrp and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                local targetHRP = targetPlayer.Character.HumanoidRootPart
+                local flingSpeed = 1593
 
-            notify("Sucesso", "Fling ativado para: " .. targetPlayer.Name)
-
-            -- Loop de fling
-            while targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") do
-                if character and character:FindFirstChild("Humanoid") and character.Humanoid.Health > 0 then
-                    targetHRP.Velocity = (targetHRP.Position - hrp.Position).unit * flingSpeed
-                    wait(0.01)
-                else
-                    break
+                -- Ajusta a velocidade
+                character.Humanoid.WalkSpeed = flingSpeed
+                
+                -- Teleporte e travamento
+                while true do
+                    if character.Humanoid.Health > 0 and targetPlayer.Character then
+                        -- Teleportar para as costas do jogador
+                        hrp.Position = targetHRP.Position - (targetHRP.CFrame.LookVector * 3) -- 3 unidades atrás
+                        wait(0.0003) -- Espera 0.3 milissegundos
+                        
+                        -- Teleportar para frente do jogador
+                        hrp.Position = targetHRP.Position + (targetHRP.CFrame.LookVector * 3) -- 3 unidades na frente
+                        wait(0.0003) -- Espera 0.3 milissegundos
+                    else
+                        break
+                    end
                 end
             end
         else
-            notify("Erro", "Jogador não encontrado ou não está na partida.")
+            notify("Erro", "Jogador não encontrado.")
         end
     end    
 })
@@ -116,11 +123,9 @@ FlingTab:AddButton({
 FlingTab:AddButton({
     Name = "Parar Fling",
     Callback = function()
-        local character = game.Players.LocalPlayer.Character
-        if character then
-            character.Humanoid.Health = 0
-            notify("Sucesso", "Fling parado.")
-        end
+        local player = game.Players.LocalPlayer
+        player.Character.Humanoid.Health = 0
+        notify("Sucesso", "Fling parado.")
     end    
 })
 
@@ -135,7 +140,6 @@ GameTab:AddButton({
     Name = "Config do Jogo",
     Callback = function()
         loadstring(game:HttpGet("https://raw.githubusercontent.com/peyton2465/Dex/master/out.lua"))()
-        notify("Sucesso", "Configurações do jogo carregadas!")
     end    
 })
 
