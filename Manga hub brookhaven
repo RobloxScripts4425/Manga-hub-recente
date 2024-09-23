@@ -1,5 +1,5 @@
 local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
-local Window = OrionLib:MakeWindow({Name = "Manga Hub 4.2.2", HidePremium = false, SaveConfig = true, ConfigFolder = "MangaHub"})
+local Window = OrionLib:MakeWindow({Name = "Manga Hub 4.2.1", HidePremium = false, SaveConfig = true, ConfigFolder = "MangaHub"})
 
 -- Aba "Jogador"
 local PlayerTab = Window:MakeTab({
@@ -119,27 +119,30 @@ AudioTab:AddTextbox({
     end    
 })
 
--- Botão para reproduzir o áudio
+-- Botão para ativar o áudio e dar o Sniper
 AudioTab:AddButton({
-    Name = "Reproduzir Áudio",
+    Name = "Ativar Áudio",
     Callback = function()
         if audioId and audioId ~= "" then
-            -- Criar um RemoteEvent para comunicar com o servidor
-            local remoteEvent = Instance.new("RemoteEvent")
-            remoteEvent.Name = "PlayAudio"
-            remoteEvent.Parent = game.ReplicatedStorage
+            local player = game.Players.LocalPlayer
 
-            remoteEvent.OnServerEvent:Connect(function(player, audioId)
+            -- Procurar pelo item Sniper no ReplicatedStorage
+            local sniper = game.ReplicatedStorage:FindFirstChild("Sniper")
+            if sniper then
+                local clonedSniper = sniper:Clone() -- Clonar o item
+                clonedSniper.Parent = player.Backpack -- Colocar no Backpack do jogador
+
+                -- Criar e reproduzir o áudio a partir do item
                 local sound = Instance.new("Sound") -- Cria uma nova instância de áudio
                 sound.SoundId = "rbxassetid://" .. audioId -- Define o ID do áudio
-                sound.Parent = game.Workspace -- Anexa ao Workspace para ser ouvido por todos
+                sound.Parent = clonedSniper -- Anexa o som ao Sniper
                 sound:Play() -- Reproduz o áudio
+
                 wait(3) -- Espera 3 segundos
                 sound:Destroy() -- Remove o som após a reprodução
-            end)
-
-            -- Chama o RemoteEvent
-            remoteEvent:FireServer(audioId)
+            else
+                print("Item Sniper não encontrado no ReplicatedStorage.")
+            end
         else
             print("Por favor, insira um ID de áudio válido.")
         end
