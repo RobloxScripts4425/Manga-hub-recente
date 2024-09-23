@@ -25,124 +25,38 @@ local PlayerTab = Window:MakeTab({
     PremiumOnly = false
 })
 
--- Botão +30 Velocidade
-PlayerTab:AddButton({
-    Name = "+30 Velocidade",
-    Callback = function()
-        local player = game.Players.LocalPlayer
-        player.Character.Humanoid.WalkSpeed = player.Character.Humanoid.WalkSpeed + 30
-        notify("Sucesso", "Você aumentou a velocidade em +30!")
-    end    
-})
-
--- Botão +30 Pulo
-PlayerTab:AddButton({
-    Name = "+30 Pulo",
-    Callback = function()
-        local player = game.Players.LocalPlayer
-        player.Character.Humanoid.JumpPower = player.Character.Humanoid.JumpPower + 30
-        notify("Sucesso", "Você aumentou o pulo em +30!")
-    end    
-})
-
--- Botão Pulo e Velocidade Normal
-PlayerTab:AddButton({
-    Name = "Pulo e Velocidade Normal",
-    Callback = function()
-        local player = game.Players.LocalPlayer
-        player.Character.Humanoid.WalkSpeed = 16
-        player.Character.Humanoid.JumpPower = 50
-        notify("Sucesso", "Você restaurou a velocidade e o pulo para o normal!")
-    end    
-})
-
--- Aba "Troll" para Fling
-local FlingTab = Window:MakeTab({
-    Name = "Troll",
+-- Adicionando a opção de áudio
+local AudioTab = Window:MakeTab({
+    Name = "Áudio",
     Icon = "rbxassetid://4483345998",
     PremiumOnly = false
 })
 
-local PlayerName
-FlingTab:AddTextbox({
-    Name = "Nome do Jogador",
-    Default = "",
-    TextDisappear = true,
-    Callback = function(Value)
-        PlayerName = string.lower(Value)
-        notify("Entrada", "Nome do jogador inserido: " .. Value)
-    end    
-})
-
--- Função de Fling ajustada com teleporte
-FlingTab:AddButton({
-    Name = "Ativar Fling",
-    Callback = function()
-        local targetPlayer = nil
-        for _, player in pairs(game.Players:GetPlayers()) do
-            local realName = string.lower(player.Name)
-            local displayName = string.lower(player.DisplayName)
-            if realName:sub(1, #PlayerName) == PlayerName or displayName:sub(1, #PlayerName) == PlayerName then
-                targetPlayer = player
-                break
-            end
-        end
-
-        if targetPlayer then
-            local character = game.Players.LocalPlayer.Character
-            local hrp = character:FindFirstChild("HumanoidRootPart")
-            
-            if hrp and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                local targetHRP = targetPlayer.Character.HumanoidRootPart
-                local flingSpeed = 5000 -- Velocidade muito alta para um fling forte
-
-                -- Ajusta a velocidade
-                character.Humanoid.WalkSpeed = flingSpeed
-                
-                -- Teleporte e travamento
-                while true do
-                    if character.Humanoid.Health > 0 and targetPlayer.Character then
-                        -- Teleportar para as costas do jogador
-                        hrp.Position = targetHRP.Position - (targetHRP.CFrame.LookVector * 3) -- 3 unidades atrás
-                        wait(0.0003) -- Espera 0.3 milissegundos
-                        
-                        -- Teleportar para frente do jogador
-                        hrp.Position = targetHRP.Position + (targetHRP.CFrame.LookVector * 3) -- 3 unidades na frente
-                        wait(0.0003) -- Espera 0.3 milissegundos
-                    else
-                        break
-                    end
-                end
-            else
-                notify("Erro", "HumanoidRootPart do jogador alvo não encontrado.")
-            end
-        else
-            notify("Erro", "Jogador não encontrado.")
-        end
-    end    
-})
-
-FlingTab:AddButton({
-    Name = "Parar Fling",
+AudioTab:AddButton({
+    Name = "Ativar Áudio FE",
     Callback = function()
         local player = game.Players.LocalPlayer
-        player.Character.Humanoid.Health = 0
-        notify("Sucesso", "Fling parado.")
+        local character = player.Character or player.CharacterAdded:Wait()
+        local hrp = character:WaitForChild("HumanoidRootPart")
+
+        -- Criar um novo objeto Sound
+        local sound = Instance.new("Sound")
+        sound.SoundId = "rbxassetid://[ID do seu áudio aqui]" -- Substitua pelo ID do áudio desejado
+        sound.Volume = 10 -- Ajuste o volume como necessário
+        sound.Parent = hrp
+
+        -- Tocar o som
+        sound:Play()
+
+        -- Opcional: Parar o som após 3 segundos, se necessário
+        wait(3)
+        sound:Stop()
+
+        notify("Áudio", "O áudio foi reproduzido.")
     end    
 })
 
--- Aba "Jogo" para abrir configurações do jogo
-local GameTab = Window:MakeTab({
-    Name = "Jogo",
-    Icon = "rbxassetid://4483345998",
-    PremiumOnly = false
-})
-
-GameTab:AddButton({
-    Name = "Config do Jogo",
-    Callback = function()
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/peyton2465/Dex/master/out.lua"))()
-    end    
-})
+-- Outras abas e funcionalidades
+-- (inclua o restante do seu script aqui)
 
 OrionLib:Init()
