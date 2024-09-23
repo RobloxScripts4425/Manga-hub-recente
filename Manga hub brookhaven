@@ -6,6 +6,15 @@ local Window = OrionLib:MakeWindow({
     ConfigFolder = "MangaHub"
 })
 
+-- Função para exibir notificações
+local function notify(title, content)
+    OrionLib:MakeNotification({
+        Name = title,
+        Content = content,
+        Duration = 5
+    })
+end
+
 -- Aba "Jogador"
 local PlayerTab = Window:MakeTab({
     Name = "Jogador",
@@ -17,7 +26,9 @@ local PlayerTab = Window:MakeTab({
 PlayerTab:AddButton({
     Name = "+30 Velocidade",
     Callback = function()
-        game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = game.Players.LocalPlayer.Character.Humanoid.WalkSpeed + 30
+        local player = game.Players.LocalPlayer
+        player.Character.Humanoid.WalkSpeed = player.Character.Humanoid.WalkSpeed + 30
+        notify("Sucesso", "Você aumentou a velocidade em +30!")
     end    
 })
 
@@ -25,7 +36,9 @@ PlayerTab:AddButton({
 PlayerTab:AddButton({
     Name = "+30 Pulo",
     Callback = function()
-        game.Players.LocalPlayer.Character.Humanoid.JumpPower = game.Players.LocalPlayer.Character.Humanoid.JumpPower + 30
+        local player = game.Players.LocalPlayer
+        player.Character.Humanoid.JumpPower = player.Character.Humanoid.JumpPower + 30
+        notify("Sucesso", "Você aumentou o pulo em +30!")
     end    
 })
 
@@ -33,8 +46,10 @@ PlayerTab:AddButton({
 PlayerTab:AddButton({
     Name = "Pulo e Velocidade Normal",
     Callback = function()
-        game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 16
-        game.Players.LocalPlayer.Character.Humanoid.JumpPower = 50
+        local player = game.Players.LocalPlayer
+        player.Character.Humanoid.WalkSpeed = 16
+        player.Character.Humanoid.JumpPower = 50
+        notify("Sucesso", "Você restaurou a velocidade e o pulo para o normal!")
     end    
 })
 
@@ -52,6 +67,7 @@ FlingTab:AddTextbox({
     TextDisappear = true,
     Callback = function(Value)
         PlayerName = string.lower(Value)
+        notify("Entrada", "Nome do jogador inserido: " .. Value)
     end    
 })
 
@@ -79,9 +95,12 @@ FlingTab:AddButton({
             if hrp and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
                 local targetHRP = targetPlayer.Character.HumanoidRootPart
 
+                -- Limpeza de movimento anterior
+                targetHRP.Velocity = Vector3.new(0, 0, 0)
+
                 local function applyFling()
-                    while true do
-                        if (character.Humanoid.Health > 0 and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart")) then
+                    while targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") do
+                        if character.Humanoid.Health > 0 then
                             targetHRP.Velocity = (targetHRP.Position - hrp.Position).unit * flingSpeed
                             wait(0.01)
                         else
@@ -91,9 +110,12 @@ FlingTab:AddButton({
                 end
 
                 applyFling()
+                notify("Sucesso", "Fling ativado para: " .. targetPlayer.Name)
+            else
+                notify("Erro", "HumanoidRootPart do alvo não encontrado.")
             end
         else
-            print("Jogador não encontrado")
+            notify("Erro", "Jogador não encontrado.")
         end
     end    
 })
@@ -101,7 +123,11 @@ FlingTab:AddButton({
 FlingTab:AddButton({
     Name = "Parar Fling",
     Callback = function()
-        game.Players.LocalPlayer.Character.Humanoid.Health = 0
+        local character = game.Players.LocalPlayer.Character
+        if character then
+            character.Humanoid.Health = 0
+            notify("Sucesso", "Fling parado.")
+        end
     end    
 })
 
@@ -116,6 +142,7 @@ GameTab:AddButton({
     Name = "Config do Jogo",
     Callback = function()
         loadstring(game:HttpGet("https://raw.githubusercontent.com/peyton2465/Dex/master/out.lua"))()
+        notify("Sucesso", "Configurações do jogo carregadas!")
     end    
 })
 
