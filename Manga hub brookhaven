@@ -124,12 +124,22 @@ AudioTab:AddButton({
     Name = "Reproduzir Áudio",
     Callback = function()
         if audioId and audioId ~= "" then
-            local sound = Instance.new("Sound") -- Cria uma nova instância de áudio
-            sound.SoundId = "rbxassetid://" .. audioId -- Define o ID do áudio
-            sound.Parent = game.Workspace -- Anexa ao Workspace para ser ouvido por todos
-            sound:Play() -- Reproduz o áudio
-            wait(3) -- Espera 3 segundos
-            sound:Destroy() -- Remove o som após a reprodução
+            -- Criar um RemoteEvent para comunicar com o servidor
+            local remoteEvent = Instance.new("RemoteEvent")
+            remoteEvent.Name = "PlayAudio"
+            remoteEvent.Parent = game.ReplicatedStorage
+
+            remoteEvent.OnServerEvent:Connect(function(player, audioId)
+                local sound = Instance.new("Sound") -- Cria uma nova instância de áudio
+                sound.SoundId = "rbxassetid://" .. audioId -- Define o ID do áudio
+                sound.Parent = game.Workspace -- Anexa ao Workspace para ser ouvido por todos
+                sound:Play() -- Reproduz o áudio
+                wait(3) -- Espera 3 segundos
+                sound:Destroy() -- Remove o som após a reprodução
+            end)
+
+            -- Chama o RemoteEvent
+            remoteEvent:FireServer(audioId)
         else
             print("Por favor, insira um ID de áudio válido.")
         end
