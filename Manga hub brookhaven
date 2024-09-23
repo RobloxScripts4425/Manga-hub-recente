@@ -1,22 +1,5 @@
 local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
-local Window = OrionLib:MakeWindow({
-    Name = "Manga Hub 4.2.1",
-    HidePremium = false,
-    SaveConfig = true,
-    ConfigFolder = "MangaHub"
-})
-
--- Função para exibir notificações
-local function notify(title, content)
-    OrionLib:MakeNotification({
-        Name = title,
-        Content = content,
-        Duration = 5
-    })
-end
-
--- Notificação de emblema quando o script é executado
-notify("Atenção", "O script está em beta, os bugs do script serão resolvidos em breve.")
+local Window = OrionLib:MakeWindow({Name = "Manga Hub 4.2.1", HidePremium = false, SaveConfig = true, ConfigFolder = "MangaHub"})
 
 -- Aba "Jogador"
 local PlayerTab = Window:MakeTab({
@@ -25,38 +8,141 @@ local PlayerTab = Window:MakeTab({
     PremiumOnly = false
 })
 
--- Adicionando a opção de áudio
+-- Botão +30 Velocidade
+PlayerTab:AddButton({
+    Name = "+30 Velocidade",
+    Callback = function()
+        game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = game.Players.LocalPlayer.Character.Humanoid.WalkSpeed + 30
+    end    
+})
+
+-- Botão +30 Pulo
+PlayerTab:AddButton({
+    Name = "+30 Pulo",
+    Callback = function()
+        game.Players.LocalPlayer.Character.Humanoid.JumpPower = game.Players.LocalPlayer.Character.Humanoid.JumpPower + 30
+    end    
+})
+
+-- Botão Pulo e Velocidade Normal
+PlayerTab:AddButton({
+    Name = "Pulo e Velocidade Normal",
+    Callback = function()
+        game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 16
+        game.Players.LocalPlayer.Character.Humanoid.JumpPower = 50
+    end    
+})
+
+-- Aba "Troll" para Fling
+local FlingTab = Window:MakeTab({
+    Name = "Troll",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+local PlayerName
+FlingTab:AddTextbox({
+    Name = "Nome do Jogador",
+    Default = "",
+    TextDisappear = true,
+    Callback = function(Value)
+        PlayerName = string.lower(Value)
+    end    
+})
+
+-- Função de Fling ajustada
+FlingTab:AddButton({
+    Name = "Ativar Fling",
+    Callback = function()
+        local targetPlayer = nil
+        for _, player in pairs(game.Players:GetPlayers()) do
+            local realName = string.lower(player.Name)
+            local displayName = string.lower(player.DisplayName)
+            if realName:sub(1, #PlayerName) == PlayerName or displayName:sub(1, #PlayerName) == PlayerName then
+                targetPlayer = player
+                break
+            end
+        end
+
+        if targetPlayer then
+            local flingSpeed = 1999
+            local character = game.Players.LocalPlayer.Character
+            local hrp = character:FindFirstChild("HumanoidRootPart")
+            
+            if hrp and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                local targetHRP = targetPlayer.Character.HumanoidRootPart
+
+                while true do
+                    if character.Humanoid.Health > 0 and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                        hrp.Position = targetHRP.Position + Vector3.new(0, 0, -2) -- Teleporta nas costas do jogador
+                        wait(0.0003) -- Aguarda 0.3 milissegundos
+                        hrp.Position = targetHRP.Position + Vector3.new(0, 0, 2) -- Teleporta na frente do jogador
+                        wait(0.0003) -- Aguarda 0.3 milissegundos
+                    else
+                        break
+                    end
+                end
+            end
+        else
+            print("Jogador não encontrado")
+        end
+    end    
+})
+
+FlingTab:AddButton({
+    Name = "Parar Fling",
+    Callback = function()
+        game.Players.LocalPlayer.Character.Humanoid.Health = 0
+    end    
+})
+
+-- Aba "Áudio"
 local AudioTab = Window:MakeTab({
     Name = "Áudio",
     Icon = "rbxassetid://4483345998",
     PremiumOnly = false
 })
 
-AudioTab:AddButton({
-    Name = "Ativar Áudio FE",
-    Callback = function()
-        local player = game.Players.LocalPlayer
-        local character = player.Character or player.CharacterAdded:Wait()
-        local hrp = character:WaitForChild("HumanoidRootPart")
-
-        -- Criar um novo objeto Sound
-        local sound = Instance.new("Sound")
-        sound.SoundId = "rbxassetid://[ID do seu áudio aqui]" -- Substitua pelo ID do áudio desejado
-        sound.Volume = 10 -- Ajuste o volume como necessário
-        sound.Parent = hrp
-
-        -- Tocar o som
-        sound:Play()
-
-        -- Opcional: Parar o som após 3 segundos, se necessário
-        wait(3)
-        sound:Stop()
-
-        notify("Áudio", "O áudio foi reproduzido.")
+-- TextBox para inserir o ID do áudio
+local audioId
+AudioTab:AddTextbox({
+    Name = "ID do Áudio",
+    Default = "",
+    TextDisappear = true,
+    Callback = function(Value)
+        audioId = Value -- Armazena o ID do áudio inserido
     end    
 })
 
--- Outras abas e funcionalidades
--- (inclua o restante do seu script aqui)
+-- Botão para reproduzir o áudio
+AudioTab:AddButton({
+    Name = "Reproduzir Áudio",
+    Callback = function()
+        if audioId and audioId ~= "" then
+            local sound = Instance.new("Sound") -- Cria uma nova instância de áudio
+            sound.SoundId = "rbxassetid://" .. audioId -- Define o ID do áudio
+            sound.Parent = game.Players.LocalPlayer.Character.HumanoidRootPart -- Anexa ao HumanoidRootPart do personagem
+            sound:Play() -- Reproduz o áudio
+            wait(3) -- Espera 3 segundos
+            sound:Destroy() -- Remove o som após a reprodução
+        else
+            print("Por favor, insira um ID de áudio válido.")
+        end
+    end    
+})
+
+-- Aba "Jogo" para abrir configurações do jogo
+local GameTab = Window:MakeTab({
+    Name = "Jogo",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+GameTab:AddButton({
+    Name = "Config do Jogo",
+    Callback = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/peyton2465/Dex/master/out.lua"))()
+    end    
+})
 
 OrionLib:Init()
