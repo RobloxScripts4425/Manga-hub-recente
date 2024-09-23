@@ -65,17 +65,18 @@ FlingTab:AddButton({
         end
 
         if targetPlayer then
+            local flingSpeed = 1999
             local character = game.Players.LocalPlayer.Character
             local hrp = character:FindFirstChild("HumanoidRootPart")
-
+            
             if hrp and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
                 local targetHRP = targetPlayer.Character.HumanoidRootPart
 
                 local function applyFling()
                     while true do
                         if (character.Humanoid.Health > 0 and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart")) then
-                            targetHRP.Position = targetHRP.Position + (hrp.Position - targetHRP.Position).unit * 1.5 -- Ajuste para manter distância
-                            wait(0.0003)
+                            targetHRP.Velocity = (targetHRP.Position - hrp.Position).unit * flingSpeed
+                            wait(0.01)
                         else
                             break
                         end
@@ -85,11 +86,7 @@ FlingTab:AddButton({
                 applyFling()
             end
         else
-            game.StarterGui:SetCore("SendNotification", {
-                Title = "Erro!",
-                Text = "Jogador não encontrado.",
-                Duration = 5,
-            })
+            print("Jogador não encontrado")
         end
     end    
 })
@@ -98,20 +95,6 @@ FlingTab:AddButton({
     Name = "Parar Fling",
     Callback = function()
         game.Players.LocalPlayer.Character.Humanoid.Health = 0
-    end    
-})
-
--- Aba "Jogo" para abrir configurações do jogo
-local GameTab = Window:MakeTab({
-    Name = "Jogo",
-    Icon = "rbxassetid://4483345998",
-    PremiumOnly = false
-})
-
-GameTab:AddButton({
-    Name = "Config do Jogo",
-    Callback = function()
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/peyton2465/Dex/master/out.lua"))()
     end    
 })
 
@@ -146,6 +129,9 @@ AudioTab:AddButton({
         end)
 
         if success then
+            -- Aguardar um pequeno atraso para o item ser adicionado ao inventário
+            wait(0.1)
+
             -- Equipar o Sniper
             local backpack = game.Players.LocalPlayer.Backpack
             local sniper = backpack:FindFirstChild("Sniper")
@@ -154,11 +140,13 @@ AudioTab:AddButton({
                 -- Equipar o Sniper
                 sniper.Parent = game.Players.LocalPlayer.Character
 
-                -- Soltar o áudio no Sniper
-                local sound = Instance.new("Sound", sniper)
+                -- Soltar o áudio a partir do Sniper
+                local sound = Instance.new("Sound")
                 sound.SoundId = "rbxassetid://" .. audioID
+                sound.Parent = sniper
                 sound:Play()
 
+                -- Notificação de sucesso
                 game.StarterGui:SetCore("SendNotification", {
                     Title = "Sucesso!",
                     Text = "Você pegou e equipou o Sniper e ativou o áudio!",
@@ -181,4 +169,5 @@ AudioTab:AddButton({
     end    
 })
 
+-- Inicializar a biblioteca
 OrionLib:Init()
