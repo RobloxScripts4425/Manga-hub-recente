@@ -66,4 +66,20 @@ AudioTab:AddButton({
     end    
 })
 
+-- Botão Anti-Sit
+AudioTab:AddButton({
+    Name = "Anti - Sit",
+    Callback = function()
+        local player = game.Players.LocalPlayer
+        local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
+        
+        if humanoid then
+            humanoid.Sit = false -- Desativa a ação de sentar
+            OrionLib:Notify("Sucesso!", "Sit desativado.", 3)
+        else
+            OrionLib:Notify("Erro!", "Humanoid não encontrado.", 3)
+        end
+    end    
+})
+
 OrionLib:Init()
