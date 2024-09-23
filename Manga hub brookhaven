@@ -74,8 +74,11 @@ AudioTab:AddButton({
         local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
         
         if humanoid then
-            humanoid.Sit = false -- Desativa a ação de sentar
-            OrionLib:Notify("Sucesso!", "Sit desativado.", 3)
+            -- Loop para desativar Humanoid.Sit
+            while true do
+                humanoid.Sit = false -- Desativa a ação de sentar
+                wait(0.1) -- Tempo de espera entre as iterações
+            end
         else
             OrionLib:Notify("Erro!", "Humanoid não encontrado.", 3)
         end
