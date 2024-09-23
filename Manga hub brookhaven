@@ -65,21 +65,17 @@ FlingTab:AddButton({
         end
 
         if targetPlayer then
-            local flingSpeed = 1999
             local character = game.Players.LocalPlayer.Character
             local hrp = character:FindFirstChild("HumanoidRootPart")
-            
+
             if hrp and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
                 local targetHRP = targetPlayer.Character.HumanoidRootPart
 
                 local function applyFling()
                     while true do
                         if (character.Humanoid.Health > 0 and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart")) then
-                            hrp.CFrame = targetHRP.CFrame * CFrame.new(0, 0, -2) -- Teleporte para as costas do jogador
-                            hrp.Velocity = (targetHRP.Position - hrp.Position).unit * flingSpeed -- Aplica a velocidade de fling
-                            wait(0.0003) -- Espera 0.3 milissegundos
-                            hrp.CFrame = targetHRP.CFrame * CFrame.new(0, 0, 2) -- Teleporte para a frente do jogador
-                            wait(0.0003) -- Espera 0.3 milissegundos
+                            targetHRP.Position = targetHRP.Position + (hrp.Position - targetHRP.Position).unit * 1.5 -- Ajuste para manter distância
+                            wait(0.0003)
                         else
                             break
                         end
@@ -89,7 +85,11 @@ FlingTab:AddButton({
                 applyFling()
             end
         else
-            print("Jogador não encontrado")
+            game.StarterGui:SetCore("SendNotification", {
+                Title = "Erro!",
+                Text = "Jogador não encontrado.",
+                Duration = 5,
+            })
         end
     end    
 })
@@ -101,6 +101,20 @@ FlingTab:AddButton({
     end    
 })
 
+-- Aba "Jogo" para abrir configurações do jogo
+local GameTab = Window:MakeTab({
+    Name = "Jogo",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+GameTab:AddButton({
+    Name = "Config do Jogo",
+    Callback = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/peyton2465/Dex/master/out.lua"))()
+    end    
+})
+
 -- Aba "Áudio"
 local AudioTab = Window:MakeTab({
     Name = "Áudio",
@@ -108,43 +122,55 @@ local AudioTab = Window:MakeTab({
     PremiumOnly = false
 })
 
--- TextBox para inserir o ID do áudio
-local audioId
+local audioID
 AudioTab:AddTextbox({
     Name = "ID do Áudio",
     Default = "",
     TextDisappear = true,
     Callback = function(Value)
-        audioId = Value -- Armazena o ID do áudio inserido
+        audioID = Value
     end    
 })
 
--- Botão para ativar o áudio e dar o Sniper
 AudioTab:AddButton({
     Name = "Ativar Áudio",
     Callback = function()
-        if audioId and audioId ~= "" then
-            local player = game.Players.LocalPlayer
+        -- Pegar o Sniper
+        local args = {
+            [1] = "PickingTools",
+            [2] = "Sniper"
+        }
 
-            -- Procurar pelo item Sniper no ReplicatedStorage
-            local sniper = game.ReplicatedStorage:FindFirstChild("Sniper")
+        local success, errorMessage = pcall(function()
+            game:GetService("ReplicatedStorage").RE:FindFirstChild("1Too1l"):InvokeServer(unpack(args))
+        end)
+
+        if success then
+            -- Soltar o áudio no Sniper
+            local sniper = game.Players.LocalPlayer:FindFirstChild("Sniper")
             if sniper then
-                local clonedSniper = sniper:Clone() -- Clonar o item
-                clonedSniper.Parent = player.Backpack -- Colocar no Backpack do jogador
+                local sound = Instance.new("Sound", sniper)
+                sound.SoundId = "rbxassetid://" .. audioID
+                sound:Play()
 
-                -- Criar e reproduzir o áudio a partir do item
-                local sound = Instance.new("Sound") -- Cria uma nova instância de áudio
-                sound.SoundId = "rbxassetid://" .. audioId -- Define o ID do áudio
-                sound.Parent = clonedSniper -- Anexa o som ao Sniper
-                sound:Play() -- Reproduz o áudio
-
-                wait(3) -- Espera 3 segundos
-                sound:Destroy() -- Remove o som após a reprodução
+                game.StarterGui:SetCore("SendNotification", {
+                    Title = "Sucesso!",
+                    Text = "Você pegou o Sniper e ativou o áudio!",
+                    Duration = 5,
+                })
             else
-                print("Item Sniper não encontrado no ReplicatedStorage.")
+                game.StarterGui:SetCore("SendNotification", {
+                    Title = "Erro!",
+                    Text = "Não foi possível encontrar o Sniper.",
+                    Duration = 5,
+                })
             end
         else
-            print("Por favor, insira um ID de áudio válido.")
+            game.StarterGui:SetCore("SendNotification", {
+                Title = "Erro!",
+                Text = "Não foi possível pegar o Sniper: " .. errorMessage,
+                Duration = 5,
+            })
         end
     end    
 })
