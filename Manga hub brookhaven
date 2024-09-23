@@ -113,6 +113,8 @@ FlingTab:AddButton({
                         break
                     end
                 end
+            else
+                notify("Erro", "HumanoidRootPart do jogador alvo não encontrado.")
             end
         else
             notify("Erro", "Jogador não encontrado.")
