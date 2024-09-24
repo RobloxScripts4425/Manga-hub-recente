@@ -1,4 +1,12 @@
-local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
+local success, OrionLib = pcall(function()
+    return loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
+end)
+
+if not success then
+    print("Erro ao carregar OrionLib. Verifique sua conexão ou o link da biblioteca.")
+    return
+end
+
 local Window = OrionLib:MakeWindow({Name = "Manga Hub 4.2.1", HidePremium = false, SaveConfig = true, ConfigFolder = "MangaHub"})
 
 -- Aba "Audio"
