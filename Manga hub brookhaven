@@ -8,7 +8,7 @@ local AudioTab = Window:MakeTab({
     PremiumOnly = false
 })
 
-local AudioID
+local AudioID = "" -- Variável para armazenar o ID do áudio
 
 -- TextBox para inserir o ID do áudio
 AudioTab:AddTextbox({
@@ -20,34 +20,47 @@ AudioTab:AddTextbox({
     end    
 })
 
--- Função para tentar tocar o áudio para todos
+-- Função para tocar o áudio para todos os jogadores
 AudioTab:AddButton({
     Name = "Ativar Audio",
     Callback = function()
-        local tool = game:GetService("ReplicatedStorage").RE:FindFirstChild("1Too1l"):InvokeServer(unpack({"PickingTools", "Sniper"}))
-        if tool then
-            game.Players.LocalPlayer.Backpack:WaitForChild("Sniper"):Parent = game.Players.LocalPlayer.Character
-            local sound = Instance.new("Sound", game.Players.LocalPlayer.Character.Sniper)
-            sound.SoundId = "rbxassetid://"..AudioID
-            sound:Play()
-            -- Garantir que o áudio seja ouvido por todos
-            wait(2.9)
-            sound:Stop()
+        local toolExists = game:GetService("ReplicatedStorage"):FindFirstChild("Sniper")
+
+        if toolExists and AudioID ~= "" then
+            -- Mover a sniper para o jogador
+            local tool = game.Players.LocalPlayer.Backpack:FindFirstChild("Sniper") or game.Players.LocalPlayer.Character:FindFirstChild("Sniper")
+            if tool then
+                -- Equipar a sniper no personagem
+                tool.Parent = game.Players.LocalPlayer.Character
+
+                -- Criar o som na sniper
+                local sound = Instance.new("Sound", tool)
+                sound.SoundId = "rbxassetid://"..AudioID
+                sound.Volume = 1
+                sound:Play()
+
+                -- Garantir que o áudio seja reproduzido por 3 segundos
+                wait(2.9)
+                sound:Stop()
+            else
+                print("Sniper não foi encontrada no Backpack ou no Character.")
+            end
         else
-            print("Sniper não encontrada")
+            print("Sniper ou AudioID inválido.")
         end
     end
 })
 
--- Função Anti-Sit
+-- Função Anti-Sit (Loop)
 AudioTab:AddButton({
     Name = "Anti-Sit",
     Callback = function()
         while true do
-            if game.Players.LocalPlayer.Character.Humanoid.Sit then
-                game.Players.LocalPlayer.Character.Humanoid.Sit = false
+            local humanoid = game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+            if humanoid and humanoid.Sit then
+                humanoid.Sit = false
             end
-            wait(0.1)
+            wait(0.1) -- Verificar o estado de Sit a cada 0.1 segundos
         end
     end
 })
