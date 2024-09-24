@@ -1,85 +1,58 @@
-local success, OrionLib = pcall(function()
-    return loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
-end)
+local AudioId = "" -- Insira o ID do áudio
+local Player = game.Players.LocalPlayer
 
-if not success then
-    print("Erro ao carregar OrionLib. Verifique sua conexão ou o link da biblioteca.")
-    return
+-- Função para pegar a sniper e tocar o áudio
+local function PlayAudioForOthers()
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    local args = {
+        [1] = "PickingTools",
+        [2] = "Sniper"
+    }
+
+    -- Pega a sniper do ReplicatedStorage
+    ReplicatedStorage.RE:FindFirstChild("1Too1l"):InvokeServer(unpack(args))
+
+    -- Equipar automaticamente a sniper
+    local character = Player.Character
+    if character then
+        local backpack = Player:WaitForChild("Backpack")
+        local sniper = backpack:FindFirstChild("Sniper")
+        if sniper then
+            sniper.Parent = character  -- Equipar sniper
+
+            -- Criar som no sniper para tocar o áudio
+            local Sound = Instance.new("Sound", sniper)
+            Sound.SoundId = "rbxassetid://"..AudioId
+            Sound.Volume = 5
+            Sound:Play()
+
+            -- Tornar inaudível para o próprio jogador
+            Sound.LocalSound = true
+        else
+            warn("Sniper não encontrada")
+        end
+    end
 end
 
-local Window = OrionLib:MakeWindow({Name = "Manga Hub 4.2.1", HidePremium = false, SaveConfig = true, ConfigFolder = "MangaHub"})
-
--- Aba "Audio"
+-- Botão para ativar o áudio
 local AudioTab = Window:MakeTab({
-    Name = "Audio",
+    Name = "Áudio",
     Icon = "rbxassetid://4483345998",
     PremiumOnly = false
 })
 
-local AudioID = "" -- Variável para armazenar o ID do áudio
-
--- TextBox para inserir o ID do áudio
 AudioTab:AddTextbox({
-    Name = "ID do Audio",
+    Name = "ID do Áudio",
     Default = "",
     TextDisappear = true,
     Callback = function(Value)
-        AudioID = Value
+        AudioId = Value
     end    
 })
 
--- Função para pegar e equipar a sniper e tocar o áudio
 AudioTab:AddButton({
-    Name = "Ativar Audio",
+    Name = "Ativar Áudio",
     Callback = function()
-        local args = {
-            [1] = "PickingTools",
-            [2] = "Sniper"
-        }
-
-        -- Invoca a função para pegar a Sniper
-        game:GetService("ReplicatedStorage").RE:FindFirstChild("1Too1l"):InvokeServer(unpack(args))
-
-        -- Aguardar para garantir que o item foi adicionado ao inventário
-        wait(0.5)
-
-        -- Equipar a sniper no personagem
-        local tool = game.Players.LocalPlayer.Backpack:FindFirstChild("Sniper") or game.Players.LocalPlayer.Character:FindFirstChild("Sniper")
-        if tool then
-            tool.Parent = game.Players.LocalPlayer.Character
-
-            -- Verifica se um ID de áudio foi inserido
-            if AudioID ~= "" then
-                -- Vincular o som ao item existente
-                local sound = Instance.new("Sound", tool)
-                sound.SoundId = "rbxassetid://"..AudioID
-                sound.Volume = 1
-                sound:Play()
-
-                -- Tentar fazer o som ser FE associando ao item
-                wait(2.9)  -- Brookhaven limite de 3s
-                sound:Stop()
-            else
-                print("Nenhum ID de áudio inserido.")
-            end
-        else
-            print("Sniper não foi encontrada no Backpack ou no Character.")
-        end
+        PlayAudioForOthers()
     end
 })
-
--- Função Anti-Sit (Loop)
-AudioTab:AddButton({
-    Name = "Anti-Sit",
-    Callback = function()
-        while true do
-            local humanoid = game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-            if humanoid and humanoid.Sit then
-                humanoid.Sit = false
-            end
-            wait(0.1) -- Verificar o estado de Sit a cada 0.1 segundos
-        end
-    end
-})
-
-OrionLib:Init()
