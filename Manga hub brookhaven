@@ -82,6 +82,7 @@ local AudioTab = Window:MakeTab({
 })
 
 -- TextBox para ID de Áudio
+local audioID
 AudioTab:AddTextbox({
     Name = "ID do Áudio",
     Default = "Digite o ID do áudio aqui",
@@ -110,6 +111,7 @@ AudioTab:AddButton({
             sound:Destroy()  -- Remove o som após tocar
         end)
 
+        -- Chamando o RemoteEvent para todos os jogadores
         remote:FireAllClients()  -- Toca o som para todos os jogadores
 
         OrionLib:MakeNotification({Name = "Sucesso", Content = "Áudio ativado!", Duration = 3})
