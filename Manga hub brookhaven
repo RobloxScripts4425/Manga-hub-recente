@@ -1,23 +1,6 @@
 local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
 local Window = OrionLib:MakeWindow({Name = "Manga Hub 4.2.1", HidePremium = false, SaveConfig = true, ConfigFolder = "MangaHub"})
 
--- Criar RemoteEvent para reprodução de áudio
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local audioRemote = Instance.new("RemoteEvent")
-audioRemote.Name = "PlayAudio"
-audioRemote.Parent = ReplicatedStorage
-
--- Função para tocar o áudio no servidor
-audioRemote.OnServerEvent:Connect(function(player, soundId)
-    local audio = Instance.new("Sound")
-    audio.SoundId = "rbxassetid://" .. soundId
-    audio.Parent = game.Workspace
-
-    audio:Play() -- Tocar o áudio
-    wait(3) -- Esperar 3 segundos
-    audio:Destroy() -- Remover o áudio após tocar
-end)
-
 -- Aba "Jogador"
 local PlayerTab = Window:MakeTab({
     Name = "Jogador",
@@ -67,7 +50,7 @@ FlingTab:AddTextbox({
     end    
 })
 
--- Função de Fling
+-- Função de Fling ajustada
 FlingTab:AddButton({
     Name = "Ativar Fling",
     Callback = function()
@@ -82,21 +65,28 @@ FlingTab:AddButton({
         end
 
         if targetPlayer then
+            local flingSpeed = 1999
             local character = game.Players.LocalPlayer.Character
             local hrp = character:FindFirstChild("HumanoidRootPart")
-            local flingSpeed = 1999
             
             if hrp and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
                 local targetHRP = targetPlayer.Character.HumanoidRootPart
-                
-                while true do
-                    hrp.Position = targetHRP.Position - (targetHRP.Position - hrp.Position).unit * 2 -- Teleportar atrás do jogador
-                    wait(0.0003) -- Espera 0.3 milissegundos
-                    hrp.Velocity = (targetHRP.Position - hrp.Position).unit * flingSpeed -- Fling
+
+                local function applyFling()
+                    while true do
+                        if (character.Humanoid.Health > 0 and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart")) then
+                            targetHRP.Position = targetHRP.Position + Vector3.new(0, 0, -1) -- Mover nas costas do jogador
+                            wait(0.01)
+                        else
+                            break
+                        end
+                    end
                 end
+
+                applyFling()
             end
         else
-            OrionLib:Notify("Erro!", "Jogador não encontrado.", 5)
+            print("Jogador não encontrado")
         end
     end    
 })
@@ -108,17 +98,17 @@ FlingTab:AddButton({
     end    
 })
 
--- Aba "Audio"
+-- Aba "Áudio" para soltar áudio
 local AudioTab = Window:MakeTab({
-    Name = "Audio",
+    Name = "Áudio",
     Icon = "rbxassetid://4483345998",
     PremiumOnly = false
 })
 
--- Textbox para o ID do áudio
+-- TextBox para ID do áudio
 local audioId
 AudioTab:AddTextbox({
-    Name = "ID do Audio",
+    Name = "ID do Áudio",
     Default = "",
     TextDisappear = true,
     Callback = function(Value)
@@ -126,40 +116,34 @@ AudioTab:AddTextbox({
     end    
 })
 
--- Botão para ativar o áudio e pegar a Sniper
+-- Função para soltar áudio
+local function playAudioForOthers()
+    if audioId and audioId ~= "" then
+        local soundPart = Instance.new("Part")
+        soundPart.Size = Vector3.new(1, 1, 1)
+        soundPart.Position = game.Players.LocalPlayer.Character.HumanoidRootPart.Position
+        soundPart.Anchored = true
+        soundPart.CanCollide = false
+        soundPart.Parent = workspace
+
+        local audio = Instance.new("Sound")
+        audio.SoundId = "rbxassetid://" .. audioId
+        audio.Parent = soundPart
+        audio:Play()
+
+        wait(3) -- Duração do áudio
+        soundPart:Destroy()
+    else
+        OrionLib:Notify("Erro!", "Por favor, insira um ID de áudio válido.", 5)
+    end
+end
+
+-- Botão para ativar o áudio
 AudioTab:AddButton({
-    Name = "Ativar Audio",
+    Name = "Soltar Áudio para Outros",
     Callback = function()
-        -- Pegar a Sniper
-        local args = {
-            [1] = "PickingTools",
-            [2] = "Sniper"
-        }
-
-        local success, errorMsg = pcall(function()
-            game:GetService("ReplicatedStorage").RE:FindFirstChild("1Too1l"):InvokeServer(unpack(args))
-        end)
-
-        if success then
-            -- Equipar a Sniper
-            local player = game.Players.LocalPlayer
-            local backpack = player:FindFirstChildOfClass("Backpack")
-
-            -- Esperar até que a Sniper esteja na mochila
-            while not backpack:FindFirstChild("Sniper") do
-                wait(0.1)
-            end
-
-            local sniper = backpack:FindFirstChild("Sniper")
-            sniper.Parent = player.Character -- Equipar a Sniper
-
-            -- Tocar o áudio no item
-            ReplicatedStorage.PlayAudio:FireServer(audioId)
-
-            OrionLib:Notify("Sucesso!", "Áudio ativado e Sniper equipada.", 5)
-        else
-            OrionLib:Notify("Erro!", "Não foi possível pegar a Sniper: " .. errorMsg, 5)
-        end
+        playAudioForOthers()
+        OrionLib:Notify("Sucesso!", "Áudio solto para outros jogadores.", 5)
     end    
 })
 
@@ -167,11 +151,14 @@ AudioTab:AddButton({
 AudioTab:AddButton({
     Name = "Anti-Sit",
     Callback = function()
+        local player = game.Players.LocalPlayer
+        local humanoid = player.Character:WaitForChild("Humanoid")
+        
         while true do
-            game.Players.LocalPlayer.Character.Humanoid.Sit = false
-            wait(0.1) -- Espera 0.1 segundos
+            humanoid.Sit = false
+            wait(0.1) -- Intervalo para verificar
         end
-    end
+    end    
 })
 
 OrionLib:Init()
