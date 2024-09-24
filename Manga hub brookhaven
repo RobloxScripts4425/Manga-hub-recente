@@ -1,77 +1,62 @@
 local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
 local Window = OrionLib:MakeWindow({Name = "Manga Hub 4.2.1", HidePremium = false, SaveConfig = true, ConfigFolder = "MangaHub"})
 
--- Aba "Jogador"
-local PlayerTab = Window:MakeTab({
-    Name = "Jogador",
-    Icon = "rbxassetid://4483345998",
-    PremiumOnly = false
-})
+local players = game:GetService("Players")
+local replicatedStorage = game:GetService("ReplicatedStorage")
 
--- Funções do Jogador
-PlayerTab:AddButton({
-    Name = "+30 Velocidade",
-    Callback = function()
-        game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = game.Players.LocalPlayer.Character.Humanoid.WalkSpeed + 30
-        OrionLib:MakeNotification({Name = "Sucesso", Content = "+30 Velocidade ativada!", Duration = 3})
-    end    
-})
+-- Função para apagar o chão
+local function eraseGround()
+    for _, part in pairs(workspace:GetChildren()) do
+        if part:IsA("BasePart") then
+            part.Transparency = 1 -- Torna invisível
+            part.CanCollide = false -- Desativa colisão
+            part.Anchored = true -- Ancla o objeto para não cair
+        end
+    end
+end
 
-PlayerTab:AddButton({
-    Name = "+30 Pulo",
-    Callback = function()
-        game.Players.LocalPlayer.Character.Humanoid.JumpPower = game.Players.LocalPlayer.Character.Humanoid.JumpPower + 30
-        OrionLib:MakeNotification({Name = "Sucesso", Content = "+30 Pulo ativado!", Duration = 3})
-    end    
-})
+-- Função para restaurar o chão
+local function restoreGround()
+    for _, part in pairs(workspace:GetChildren()) do
+        if part:IsA("BasePart") then
+            part.Transparency = 0 -- Torna visível
+            part.CanCollide = true -- Restaura colisão
+            part.Anchored = false -- Desancla o objeto
+        end
+    end
+end
 
-PlayerTab:AddButton({
-    Name = "Pulo e Velocidade Normal",
-    Callback = function()
-        game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 16
-        game.Players.LocalPlayer.Character.Humanoid.JumpPower = 50
-        OrionLib:MakeNotification({Name = "Sucesso", Content = "Valores restaurados para normal!", Duration = 3})
-    end    
-})
+-- Função para tocar áudio
+local function playAudioForOthers(audioId)
+    local sound = Instance.new("Sound")
+    sound.SoundId = "rbxassetid://" .. audioId
+    sound.Parent = workspace
+    sound:Play()
+    wait(3) -- Toca por 3 segundos
+    sound:Destroy() -- Remove o som após tocar
+end
 
--- Aba "Troll"
+-- Aba "Troll de Mapa"
 local TrollTab = Window:MakeTab({
-    Name = "Troll de mapa",
+    Name = "Troll de Mapa",
     Icon = "rbxassetid://4483345998",
     PremiumOnly = false
 })
 
--- Função para Apagar o Chão (FE)
-local function removeFloor()
-    for _, part in pairs(workspace:GetDescendants()) do
-        if part:IsA("BasePart") and part.Name ~= "Baseplate" then
-            part.Transparency = 1
-            part.CanCollide = false  -- Remove colisão para outros
-        end
-    end
-    OrionLib:MakeNotification({Name = "Sucesso", Content = "Chão apagado!", Duration = 3})
-end
-
--- Função para Restaurar o Chão (FE)
-local function restoreFloor()
-    for _, part in pairs(workspace:GetDescendants()) do
-        if part:IsA("BasePart") and part.Name ~= "Baseplate" then
-            part.Transparency = 0
-            part.CanCollide = true  -- Restaura a colisão
-        end
-    end
-    OrionLib:MakeNotification({Name = "Sucesso", Content = "Chão restaurado!", Duration = 3})
-end
-
--- Botões para Apagar e Restaurar Chão
+-- Botão para apagar o chão
 TrollTab:AddButton({
-    Name = "Apagar Mapa",
-    Callback = removeFloor
+    Name = "Apagar Chão",
+    Callback = function()
+        game.ReplicatedStorage:WaitForChild("RE"):FireServer("EraseGround") -- Chama o servidor para apagar o chão
+    end
 })
 
+-- Botão para restaurar o chão
 TrollTab:AddButton({
-    Name = "Restaurar Mapa",
-    Callback = restoreFloor
+    Name = "Restaurar Chão",
+    Callback = function()
+        game.ReplicatedStorage:WaitForChild("RE"):FireServer("RestoreGround") -- Chama o servidor para restaurar o chão
+    end
 })
 
 -- Aba "Áudio"
@@ -81,39 +66,37 @@ local AudioTab = Window:MakeTab({
     PremiumOnly = false
 })
 
--- TextBox para ID de Áudio
-local audioID
+-- TextBox para inserir o ID do áudio
 AudioTab:AddTextbox({
     Name = "ID do Áudio",
-    Default = "Digite o ID do áudio aqui",
+    Default = "",
     TextDisappear = true,
-    Callback = function(text)
-        audioID = text
-    end    
+    Callback = function(value)
+        print("Áudio ID definido como: " .. value) -- Apenas um log para verificar o ID
+    end
 })
 
--- Botão para Ativar Áudio (FE)
+-- Botão para ativar o áudio
 AudioTab:AddButton({
     Name = "Ativar Áudio",
     Callback = function()
-        local replicatedStorage = game:GetService("ReplicatedStorage")
-        local remote = Instance.new("RemoteEvent", replicatedStorage)
-        remote.Name = "PlayAudio"
-
-        remote.OnServerEvent:Connect(function(player, audioId)
-            local sound = Instance.new("Sound")
-            sound.SoundId = "rbxassetid://" .. audioId
-            sound.Parent = workspace  -- Colocar no workspace para todos ouvirem
-            sound:Play()
-            wait(3)  -- Dura 3 segundos
-            sound:Destroy()  -- Remove o som após tocar
-        end)
-
-        -- Chamando o RemoteEvent para todos os jogadores
-        remote:FireAllClients(audioID)  -- Toca o som para todos os jogadores
-
-        OrionLib:MakeNotification({Name = "Sucesso", Content = "Áudio ativado!", Duration = 3})
-    end    
+        local audioId = AudioTab:GetTextboxValue("ID do Áudio") -- Obtém o ID do áudio
+        if audioId then
+            playAudioForOthers(audioId) -- Chama a função para tocar o áudio para outros jogadores
+        end
+    end
 })
+
+-- Conectar as funções do servidor
+local function onServerEvent(player, action)
+    if action == "EraseGround" then
+        eraseGround()
+    elseif action == "RestoreGround" then
+        restoreGround()
+    end
+end
+
+-- Conectar a função ao evento do servidor
+replicatedStorage:WaitForChild("RE").OnServerEvent:Connect(onServerEvent)
 
 OrionLib:Init()
