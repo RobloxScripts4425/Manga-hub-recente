@@ -50,14 +50,14 @@ AudioTab:AddButton({
 
             -- Verifica se um ID de áudio foi inserido
             if AudioID ~= "" then
-                -- Criar o som na sniper
+                -- Vincular o som ao item existente
                 local sound = Instance.new("Sound", tool)
                 sound.SoundId = "rbxassetid://"..AudioID
                 sound.Volume = 1
                 sound:Play()
 
-                -- Garantir que o áudio seja reproduzido por 3 segundos (Brookhaven Limite)
-                wait(2.9)
+                -- Tentar fazer o som ser FE associando ao item
+                wait(2.9)  -- Brookhaven limite de 3s
                 sound:Stop()
             else
                 print("Nenhum ID de áudio inserido.")
