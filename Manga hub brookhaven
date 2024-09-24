@@ -8,7 +8,7 @@ local PlayerTab = Window:MakeTab({
     PremiumOnly = false
 })
 
--- Botões do Jogador
+-- Funções do Jogador
 PlayerTab:AddButton({
     Name = "+30 Velocidade",
     Callback = function()
@@ -41,18 +41,18 @@ local TrollTab = Window:MakeTab({
     PremiumOnly = false
 })
 
--- Função para Apagar o Chão
+-- Função para Apagar o Chão (FE)
 local function removeFloor()
     for _, part in pairs(workspace:GetDescendants()) do
         if part:IsA("BasePart") and part.Name ~= "Baseplate" then
             part.Transparency = 1
-            part.CanCollide = true  -- Mantém a colisão
+            part.CanCollide = false  -- Remove colisão para outros
         end
     end
     OrionLib:MakeNotification({Name = "Sucesso", Content = "Chão apagado!", Duration = 3})
 end
 
--- Função para Restaurar o Chão
+-- Função para Restaurar o Chão (FE)
 local function restoreFloor()
     for _, part in pairs(workspace:GetDescendants()) do
         if part:IsA("BasePart") and part.Name ~= "Baseplate" then
@@ -63,13 +63,12 @@ local function restoreFloor()
     OrionLib:MakeNotification({Name = "Sucesso", Content = "Chão restaurado!", Duration = 3})
 end
 
--- Botão para Apagar o Chão
+-- Botões para Apagar e Restaurar Chão
 TrollTab:AddButton({
     Name = "Apagar Mapa",
     Callback = removeFloor
 })
 
--- Botão para Restaurar o Chão
 TrollTab:AddButton({
     Name = "Restaurar Mapa",
     Callback = restoreFloor
@@ -92,19 +91,26 @@ AudioTab:AddTextbox({
     end    
 })
 
--- Botão para Ativar Áudio
+-- Botão para Ativar Áudio (FE)
 AudioTab:AddButton({
     Name = "Ativar Áudio",
     Callback = function()
         local replicatedStorage = game:GetService("ReplicatedStorage")
-        local audio = Instance.new("Sound")
-        audio.SoundId = "rbxassetid://" .. audioID
-        audio.Parent = replicatedStorage
+        local sound = Instance.new("Sound")
+        sound.SoundId = "rbxassetid://" .. audioID
+        sound.Parent = replicatedStorage
 
-        -- Ativação do áudio por 3 segundos
-        audio:Play()
-        wait(3)  -- Espera por 3 segundos
-        audio:Destroy()  -- Remove o áudio após tocar
+        -- Utilizar um RemoteEvent para tocar o som no servidor
+        local remote = Instance.new("RemoteEvent", replicatedStorage)
+        remote.Name = "PlayAudio"
+
+        remote.OnServerEvent:Connect(function(player)
+            sound:Play()
+            wait(3)  -- Dura 3 segundos
+            sound:Destroy()  -- Remove o som após tocar
+        end)
+
+        remote:FireAllClients()  -- Toca o som para todos os jogadores
 
         OrionLib:MakeNotification({Name = "Sucesso", Content = "Áudio ativado!", Duration = 3})
     end    
