@@ -116,6 +116,10 @@ AudioTab:AddTextbox({
     end    
 })
 
+-- RemoteEvent para tocar áudio
+local audioRemote = Instance.new("RemoteEvent", game.ReplicatedStorage)
+audioRemote.Name = "PlayAudio"
+
 -- Função para soltar áudio
 local function playAudioForOthers()
     if audioId and audioId ~= "" then
@@ -129,10 +133,15 @@ local function playAudioForOthers()
         local audio = Instance.new("Sound")
         audio.SoundId = "rbxassetid://" .. audioId
         audio.Parent = soundPart
-        audio:Play()
 
-        wait(3) -- Duração do áudio
-        soundPart:Destroy()
+        -- Conectando a RemoteEvent para tocar o áudio
+        audioRemote.OnServerEvent:Connect(function(player)
+            audio:Play()
+            wait(3) -- Duração do áudio
+            soundPart:Destroy()
+        end)
+
+        audioRemote:FireAllClients() -- Tocar o áudio para todos os jogadores
     else
         OrionLib:Notify("Erro!", "Por favor, insira um ID de áudio válido.", 5)
     end
