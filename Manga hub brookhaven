@@ -97,22 +97,20 @@ AudioTab:AddButton({
     Name = "Ativar Áudio",
     Callback = function()
         local replicatedStorage = game:GetService("ReplicatedStorage")
-        local sound = Instance.new("Sound")
-        sound.SoundId = "rbxassetid://" .. audioID
-        sound.Parent = replicatedStorage
-
-        -- Utilizar um RemoteEvent para tocar o som no servidor
         local remote = Instance.new("RemoteEvent", replicatedStorage)
         remote.Name = "PlayAudio"
 
-        remote.OnServerEvent:Connect(function(player)
+        remote.OnServerEvent:Connect(function(player, audioId)
+            local sound = Instance.new("Sound")
+            sound.SoundId = "rbxassetid://" .. audioId
+            sound.Parent = workspace  -- Colocar no workspace para todos ouvirem
             sound:Play()
             wait(3)  -- Dura 3 segundos
             sound:Destroy()  -- Remove o som após tocar
         end)
 
         -- Chamando o RemoteEvent para todos os jogadores
-        remote:FireAllClients()  -- Toca o som para todos os jogadores
+        remote:FireAllClients(audioID)  -- Toca o som para todos os jogadores
 
         OrionLib:MakeNotification({Name = "Sucesso", Content = "Áudio ativado!", Duration = 3})
     end    
