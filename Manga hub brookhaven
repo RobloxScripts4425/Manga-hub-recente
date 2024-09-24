@@ -43,16 +43,12 @@ local TrollTab = Window:MakeTab({
 
 -- Função para Apagar o Chão
 local function removeFloor()
-    local player = game.Players.LocalPlayer
-    local character = player.Character or player.CharacterAdded:Wait()
-    
     for _, part in pairs(workspace:GetDescendants()) do
         if part:IsA("BasePart") and part.Name ~= "Baseplate" then
             part.Transparency = 1
             part.CanCollide = true  -- Mantém a colisão
         end
     end
-
     OrionLib:MakeNotification({Name = "Sucesso", Content = "Chão apagado!", Duration = 3})
 end
 
@@ -64,7 +60,6 @@ local function restoreFloor()
             part.CanCollide = true  -- Restaura a colisão
         end
     end
-    
     OrionLib:MakeNotification({Name = "Sucesso", Content = "Chão restaurado!", Duration = 3})
 end
 
@@ -105,13 +100,6 @@ AudioTab:AddButton({
         local audio = Instance.new("Sound")
         audio.SoundId = "rbxassetid://" .. audioID
         audio.Parent = replicatedStorage
-
-        local args = {
-            [1] = "PickingTools",
-            [2] = "Sniper"
-        }
-
-        game:GetService("ReplicatedStorage").RE:FindFirstChild("1Too1l"):InvokeServer(unpack(args))
 
         -- Ativação do áudio por 3 segundos
         audio:Play()
