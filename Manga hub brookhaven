@@ -28,33 +28,42 @@ AudioTab:AddTextbox({
     end    
 })
 
--- Função para tocar o áudio para todos os jogadores
+-- Função para pegar e equipar a sniper e tocar o áudio
 AudioTab:AddButton({
     Name = "Ativar Audio",
     Callback = function()
-        local toolExists = game:GetService("ReplicatedStorage"):FindFirstChild("Sniper")
+        local args = {
+            [1] = "PickingTools",
+            [2] = "Sniper"
+        }
 
-        if toolExists and AudioID ~= "" then
-            -- Mover a sniper para o jogador
-            local tool = game.Players.LocalPlayer.Backpack:FindFirstChild("Sniper") or game.Players.LocalPlayer.Character:FindFirstChild("Sniper")
-            if tool then
-                -- Equipar a sniper no personagem
-                tool.Parent = game.Players.LocalPlayer.Character
+        -- Invoca a função para pegar a Sniper
+        game:GetService("ReplicatedStorage").RE:FindFirstChild("1Too1l"):InvokeServer(unpack(args))
 
+        -- Aguardar para garantir que o item foi adicionado ao inventário
+        wait(0.5)
+
+        -- Equipar a sniper no personagem
+        local tool = game.Players.LocalPlayer.Backpack:FindFirstChild("Sniper") or game.Players.LocalPlayer.Character:FindFirstChild("Sniper")
+        if tool then
+            tool.Parent = game.Players.LocalPlayer.Character
+
+            -- Verifica se um ID de áudio foi inserido
+            if AudioID ~= "" then
                 -- Criar o som na sniper
                 local sound = Instance.new("Sound", tool)
                 sound.SoundId = "rbxassetid://"..AudioID
                 sound.Volume = 1
                 sound:Play()
 
-                -- Garantir que o áudio seja reproduzido por 3 segundos
+                -- Garantir que o áudio seja reproduzido por 3 segundos (Brookhaven Limite)
                 wait(2.9)
                 sound:Stop()
             else
-                print("Sniper não foi encontrada no Backpack ou no Character.")
+                print("Nenhum ID de áudio inserido.")
             end
         else
-            print("Sniper ou AudioID inválido.")
+            print("Sniper não foi encontrada no Backpack ou no Character.")
         end
     end
 })
