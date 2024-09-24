@@ -49,7 +49,7 @@ local function removeFloor()
     for _, part in pairs(workspace:GetDescendants()) do
         if part:IsA("BasePart") and part.Name ~= "Baseplate" then
             part.Transparency = 1
-            part.CanCollide = false
+            part.CanCollide = true  -- Mantém a colisão
         end
     end
 
@@ -61,7 +61,7 @@ local function restoreFloor()
     for _, part in pairs(workspace:GetDescendants()) do
         if part:IsA("BasePart") and part.Name ~= "Baseplate" then
             part.Transparency = 0
-            part.CanCollide = true
+            part.CanCollide = true  -- Restaura a colisão
         end
     end
     
