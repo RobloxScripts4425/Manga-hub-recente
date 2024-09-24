@@ -18,6 +18,96 @@ audioRemote.OnServerEvent:Connect(function(player, soundId)
     audio:Destroy() -- Remover o áudio após tocar
 end)
 
+-- Aba "Jogador"
+local PlayerTab = Window:MakeTab({
+    Name = "Jogador",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+-- Botão +30 Velocidade
+PlayerTab:AddButton({
+    Name = "+30 Velocidade",
+    Callback = function()
+        game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = game.Players.LocalPlayer.Character.Humanoid.WalkSpeed + 30
+    end    
+})
+
+-- Botão +30 Pulo
+PlayerTab:AddButton({
+    Name = "+30 Pulo",
+    Callback = function()
+        game.Players.LocalPlayer.Character.Humanoid.JumpPower = game.Players.LocalPlayer.Character.Humanoid.JumpPower + 30
+    end    
+})
+
+-- Botão Pulo e Velocidade Normal
+PlayerTab:AddButton({
+    Name = "Pulo e Velocidade Normal",
+    Callback = function()
+        game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 16
+        game.Players.LocalPlayer.Character.Humanoid.JumpPower = 50
+    end    
+})
+
+-- Aba "Troll" para Fling
+local FlingTab = Window:MakeTab({
+    Name = "Troll",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+local PlayerName
+FlingTab:AddTextbox({
+    Name = "Nome do Jogador",
+    Default = "",
+    TextDisappear = true,
+    Callback = function(Value)
+        PlayerName = string.lower(Value)
+    end    
+})
+
+-- Função de Fling
+FlingTab:AddButton({
+    Name = "Ativar Fling",
+    Callback = function()
+        local targetPlayer = nil
+        for _, player in pairs(game.Players:GetPlayers()) do
+            local realName = string.lower(player.Name)
+            local displayName = string.lower(player.DisplayName)
+            if realName:sub(1, #PlayerName) == PlayerName or displayName:sub(1, #PlayerName) == PlayerName then
+                targetPlayer = player
+                break
+            end
+        end
+
+        if targetPlayer then
+            local character = game.Players.LocalPlayer.Character
+            local hrp = character:FindFirstChild("HumanoidRootPart")
+            local flingSpeed = 1999
+            
+            if hrp and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                local targetHRP = targetPlayer.Character.HumanoidRootPart
+                
+                while true do
+                    hrp.Position = targetHRP.Position - (targetHRP.Position - hrp.Position).unit * 2 -- Teleportar atrás do jogador
+                    wait(0.0003) -- Espera 0.3 milissegundos
+                    hrp.Velocity = (targetHRP.Position - hrp.Position).unit * flingSpeed -- Fling
+                end
+            end
+        else
+            OrionLib:Notify("Erro!", "Jogador não encontrado.", 5)
+        end
+    end    
+})
+
+FlingTab:AddButton({
+    Name = "Parar Fling",
+    Callback = function()
+        game.Players.LocalPlayer.Character.Humanoid.Health = 0
+    end    
+})
+
 -- Aba "Audio"
 local AudioTab = Window:MakeTab({
     Name = "Audio",
@@ -53,22 +143,20 @@ AudioTab:AddButton({
         if success then
             -- Equipar a Sniper
             local player = game.Players.LocalPlayer
-            local backpack = player.Backpack
+            local backpack = player:FindFirstChildOfClass("Backpack")
 
-            -- Verificar se a Sniper foi adicionada ao inventário
-            local sniper = backpack:FindFirstChild("Sniper")
-            if sniper then
-                sniper.Parent = player.Character -- Equipar a Sniper
-                wait(0.1) -- Pequeno delay para garantir que o item esteja equipado
-
-                -- Tocar o áudio usando RemoteEvent
-                audioRemote:FireServer(audioId)
-
-                -- Notificação de sucesso
-                OrionLib:Notify("Sucesso!", "Áudio ativado e Sniper equipada.", 5)
-            else
-                OrionLib:Notify("Erro!", "Sniper não encontrada no inventário.", 5)
+            -- Esperar até que a Sniper esteja na mochila
+            while not backpack:FindFirstChild("Sniper") do
+                wait(0.1)
             end
+
+            local sniper = backpack:FindFirstChild("Sniper")
+            sniper.Parent = player.Character -- Equipar a Sniper
+
+            -- Tocar o áudio no item
+            ReplicatedStorage.PlayAudio:FireServer(audioId)
+
+            OrionLib:Notify("Sucesso!", "Áudio ativado e Sniper equipada.", 5)
         else
             OrionLib:Notify("Erro!", "Não foi possível pegar a Sniper: " .. errorMsg, 5)
         end
@@ -77,21 +165,13 @@ AudioTab:AddButton({
 
 -- Botão Anti-Sit
 AudioTab:AddButton({
-    Name = "Anti - Sit",
+    Name = "Anti-Sit",
     Callback = function()
-        local player = game.Players.LocalPlayer
-        local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
-        
-        if humanoid then
-            -- Loop para desativar Humanoid.Sit
-            while true do
-                humanoid.Sit = false -- Desativa a ação de sentar
-                wait(0.1) -- Tempo de espera entre as iterações
-            end
-        else
-            OrionLib:Notify("Erro!", "Humanoid não encontrado.", 3)
+        while true do
+            game.Players.LocalPlayer.Character.Humanoid.Sit = false
+            wait(0.1) -- Espera 0.1 segundos
         end
-    end    
+    end
 })
 
 OrionLib:Init()
