@@ -1,4 +1,14 @@
-local AudioId = "" -- Insira o ID do áudio
+local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
+
+local Window = OrionLib:MakeWindow({
+    Name = "Manga Hub 4.2.1",
+    HidePremium = false,
+    SaveConfig = true,
+    ConfigFolder = "MangaHub"
+})
+
+-- Variável para armazenar o ID do áudio
+local AudioId = "" 
 local Player = game.Players.LocalPlayer
 
 -- Função para pegar a sniper e tocar o áudio
@@ -34,13 +44,14 @@ local function PlayAudioForOthers()
     end
 end
 
--- Botão para ativar o áudio
+-- Aba para os controles de áudio
 local AudioTab = Window:MakeTab({
     Name = "Áudio",
     Icon = "rbxassetid://4483345998",
     PremiumOnly = false
 })
 
+-- Textbox para o ID do áudio
 AudioTab:AddTextbox({
     Name = "ID do Áudio",
     Default = "",
@@ -50,9 +61,13 @@ AudioTab:AddTextbox({
     end    
 })
 
+-- Botão para ativar o áudio
 AudioTab:AddButton({
     Name = "Ativar Áudio",
     Callback = function()
         PlayAudioForOthers()
     end
 })
+
+-- Inicializa o OrionLib para carregar a interface
+OrionLib:Init()
