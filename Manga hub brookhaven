@@ -1,85 +1,125 @@
 local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
 local Window = OrionLib:MakeWindow({Name = "Manga Hub 4.2.1", HidePremium = false, SaveConfig = true, ConfigFolder = "MangaHub"})
 
-local Players = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local localPlayer = Players.LocalPlayer
-local playerGui = localPlayer:WaitForChild("PlayerGui")
-local workspace = game:GetService("Workspace")
+-- Aba "Jogador"
+local PlayerTab = Window:MakeTab({
+    Name = "Jogador",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
 
--- Função para apagar o mapa (visualmente, mas ainda andar sobre ele)
-local function removeMap()
+-- Botões do Jogador
+PlayerTab:AddButton({
+    Name = "+30 Velocidade",
+    Callback = function()
+        game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = game.Players.LocalPlayer.Character.Humanoid.WalkSpeed + 30
+        OrionLib:MakeNotification({Name = "Sucesso", Content = "+30 Velocidade ativada!", Duration = 3})
+    end    
+})
+
+PlayerTab:AddButton({
+    Name = "+30 Pulo",
+    Callback = function()
+        game.Players.LocalPlayer.Character.Humanoid.JumpPower = game.Players.LocalPlayer.Character.Humanoid.JumpPower + 30
+        OrionLib:MakeNotification({Name = "Sucesso", Content = "+30 Pulo ativado!", Duration = 3})
+    end    
+})
+
+PlayerTab:AddButton({
+    Name = "Pulo e Velocidade Normal",
+    Callback = function()
+        game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 16
+        game.Players.LocalPlayer.Character.Humanoid.JumpPower = 50
+        OrionLib:MakeNotification({Name = "Sucesso", Content = "Valores restaurados para normal!", Duration = 3})
+    end    
+})
+
+-- Aba "Troll"
+local TrollTab = Window:MakeTab({
+    Name = "Troll de mapa",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+-- Função para Apagar o Chão
+local function removeFloor()
+    local player = game.Players.LocalPlayer
+    local character = player.Character or player.CharacterAdded:Wait()
+    
     for _, part in pairs(workspace:GetDescendants()) do
-        if part:IsA("BasePart") and part.Anchored and part.Name ~= "HumanoidRootPart" then
-            -- Torna o chão invisível, mas mantém a colisão
+        if part:IsA("BasePart") and part.Name ~= "Baseplate" then
             part.Transparency = 1
+            part.CanCollide = false
+        end
+    end
+
+    OrionLib:MakeNotification({Name = "Sucesso", Content = "Chão apagado!", Duration = 3})
+end
+
+-- Função para Restaurar o Chão
+local function restoreFloor()
+    for _, part in pairs(workspace:GetDescendants()) do
+        if part:IsA("BasePart") and part.Name ~= "Baseplate" then
+            part.Transparency = 0
             part.CanCollide = true
         end
     end
+    
+    OrionLib:MakeNotification({Name = "Sucesso", Content = "Chão restaurado!", Duration = 3})
 end
 
--- Função para tocar o áudio em outros jogadores (FE)
-local function playAudioForOthers(audioId)
-    for _, player in pairs(Players:GetPlayers()) do
-        if player ~= localPlayer then
-            local audio = Instance.new("Sound")
-            audio.SoundId = "rbxassetid://"..audioId
-            audio.Volume = 5
-            audio.TimePosition = 0
-            audio.Parent = player.Character:FindFirstChild("HumanoidRootPart")
-            audio:Play()
+-- Botão para Apagar o Chão
+TrollTab:AddButton({
+    Name = "Apagar Mapa",
+    Callback = removeFloor
+})
 
-            -- Destruir o áudio após 3 segundos
-            game:GetService("Debris"):AddItem(audio, 3)
-        end
-    end
-end
+-- Botão para Restaurar o Chão
+TrollTab:AddButton({
+    Name = "Restaurar Mapa",
+    Callback = restoreFloor
+})
 
--- Aba de Áudio
+-- Aba "Áudio"
 local AudioTab = Window:MakeTab({
     Name = "Áudio",
     Icon = "rbxassetid://4483345998",
     PremiumOnly = false
 })
 
--- TextBox para inserir o ID do áudio
-local audioId = ""
+-- TextBox para ID de Áudio
 AudioTab:AddTextbox({
-    Name = "Insira o ID do Áudio",
-    Default = "",
+    Name = "ID do Áudio",
+    Default = "Digite o ID do áudio aqui",
     TextDisappear = true,
-    Callback = function(value)
-        audioId = value
-    end
+    Callback = function(text)
+        audioID = text
+    end    
 })
 
--- Botão para ativar o áudio
+-- Botão para Ativar Áudio
 AudioTab:AddButton({
     Name = "Ativar Áudio",
     Callback = function()
-        if audioId ~= "" then
-            playAudioForOthers(audioId)
-            print("Áudio ativado para outros jogadores.")
-        else
-            print("Por favor, insira um ID de áudio válido.")
-        end
-    end
-})
+        local replicatedStorage = game:GetService("ReplicatedStorage")
+        local audio = Instance.new("Sound")
+        audio.SoundId = "rbxassetid://" .. audioID
+        audio.Parent = replicatedStorage
 
--- Aba "Troll de mapa"
-local MapTrollTab = Window:MakeTab({
-    Name = "Troll de mapa",
-    Icon = "rbxassetid://4483345998",
-    PremiumOnly = false
-})
+        local args = {
+            [1] = "PickingTools",
+            [2] = "Sniper"
+        }
 
--- Botão "Apagar Mapa"
-MapTrollTab:AddButton({
-    Name = "Apagar Mapa",
-    Callback = function()
-        removeMap()
-        print("O chão foi apagado visualmente.")
-    end
+        game:GetService("ReplicatedStorage").RE:FindFirstChild("1Too1l"):InvokeServer(unpack(args))
+
+        -- Ativação do áudio por 3 segundos
+        audio:Play()
+        wait(3)  -- Espera por 3 segundos
+        audio:Destroy()  -- Remove o áudio após tocar
+
+        OrionLib:MakeNotification({Name = "Sucesso", Content = "Áudio ativado!", Duration = 3})
+    end    
 })
 
 OrionLib:Init()
