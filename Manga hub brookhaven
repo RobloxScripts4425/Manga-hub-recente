@@ -1,8 +1,12 @@
 local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
 local Window = OrionLib:MakeWindow({Name = "Manga Hub 4.2.1", HidePremium = false, SaveConfig = true, ConfigFolder = "MangaHub"})
 
-local players = game:GetService("Players")
 local replicatedStorage = game:GetService("ReplicatedStorage")
+
+-- Crie um RemoteEvent se ele não existir
+local remoteEvent = Instance.new("RemoteEvent")
+remoteEvent.Name = "RE"
+remoteEvent.Parent = replicatedStorage
 
 -- Função para apagar o chão
 local function eraseGround()
@@ -10,7 +14,6 @@ local function eraseGround()
         if part:IsA("BasePart") then
             part.Transparency = 1 -- Torna invisível
             part.CanCollide = false -- Desativa colisão
-            part.Anchored = true -- Ancla o objeto para não cair
         end
     end
 end
@@ -21,7 +24,6 @@ local function restoreGround()
         if part:IsA("BasePart") then
             part.Transparency = 0 -- Torna visível
             part.CanCollide = true -- Restaura colisão
-            part.Anchored = false -- Desancla o objeto
         end
     end
 end
@@ -47,7 +49,7 @@ local TrollTab = Window:MakeTab({
 TrollTab:AddButton({
     Name = "Apagar Chão",
     Callback = function()
-        game.ReplicatedStorage:WaitForChild("RE"):FireServer("EraseGround") -- Chama o servidor para apagar o chão
+        remoteEvent:FireServer("EraseGround") -- Chama o servidor para apagar o chão
     end
 })
 
@@ -55,7 +57,7 @@ TrollTab:AddButton({
 TrollTab:AddButton({
     Name = "Restaurar Chão",
     Callback = function()
-        game.ReplicatedStorage:WaitForChild("RE"):FireServer("RestoreGround") -- Chama o servidor para restaurar o chão
+        remoteEvent:FireServer("RestoreGround") -- Chama o servidor para restaurar o chão
     end
 })
 
@@ -72,18 +74,16 @@ AudioTab:AddTextbox({
     Default = "",
     TextDisappear = true,
     Callback = function(value)
-        print("Áudio ID definido como: " .. value) -- Apenas um log para verificar o ID
-    end
-})
-
--- Botão para ativar o áudio
-AudioTab:AddButton({
-    Name = "Ativar Áudio",
-    Callback = function()
-        local audioId = AudioTab:GetTextboxValue("ID do Áudio") -- Obtém o ID do áudio
-        if audioId then
-            playAudioForOthers(audioId) -- Chama a função para tocar o áudio para outros jogadores
-        end
+        local audioId = value
+        -- Botão para ativar o áudio
+        AudioTab:AddButton({
+            Name = "Ativar Áudio",
+            Callback = function()
+                if audioId then
+                    playAudioForOthers(audioId) -- Chama a função para tocar o áudio para outros jogadores
+                end
+            end
+        })
     end
 })
 
@@ -97,6 +97,6 @@ local function onServerEvent(player, action)
 end
 
 -- Conectar a função ao evento do servidor
-replicatedStorage:WaitForChild("RE").OnServerEvent:Connect(onServerEvent)
+remoteEvent.OnServerEvent:Connect(onServerEvent)
 
 OrionLib:Init()
