@@ -30,10 +30,10 @@ local function getBombFromReplicatedStorage()
         if bomb then
             return bomb
         else
-            print("A 'Bomb' não foi encontrada em ClonedTools.")
+            warn("'Bomb' não foi encontrada em 'ClonedTools'.")
         end
     else
-        print("A pasta 'ClonedTools' não foi encontrada no ReplicatedStorage.")
+        warn("'ClonedTools' não foi encontrado no 'ReplicatedStorage'.")
     end
     return nil
 end
@@ -42,17 +42,12 @@ end
 local function teleportToBomb()
     local bomb = getBombFromReplicatedStorage()
     if bomb then
-        -- Checa se o modelo possui uma PrimaryPart
-        if bomb:IsA("Model") and bomb.PrimaryPart then
-            LocalPlayer.Character.HumanoidRootPart.CFrame = bomb.PrimaryPart.CFrame
+        -- Verifica se há uma BasePart válida dentro do modelo Bomb
+        local part = bomb:FindFirstChildWhichIsA("BasePart")
+        if part then
+            LocalPlayer.Character.HumanoidRootPart.CFrame = part.CFrame + Vector3.new(0, 3, 0) -- Teleporta o jogador 3 unidades acima da Bomb
         else
-            -- Se não tiver PrimaryPart, tenta pegar a primeira peça (Part) dentro do modelo
-            local part = bomb:FindFirstChildWhichIsA("BasePart")
-            if part then
-                LocalPlayer.Character.HumanoidRootPart.CFrame = part.CFrame
-            else
-                print("Não foi possível encontrar uma peça na Bomb para teleportar.")
-            end
+            warn("Nenhuma 'BasePart' foi encontrada no modelo 'Bomb'.")
         end
     end
 end
@@ -61,18 +56,18 @@ end
 local function clickBomb100Times()
     local bomb = getBombFromReplicatedStorage()
     if bomb then
-        teleportToBomb()
+        teleportToBomb() -- Primeiro, teleporta o jogador até a Bomb
         for i = 1, 100 do
             pcall(function()
-                -- Verifica se há um ClickDetector para clicar
+                -- Procura por um ClickDetector na Bomb e simula o clique
                 local clickDetector = bomb:FindFirstChildWhichIsA("ClickDetector")
                 if clickDetector then
                     fireclickdetector(clickDetector) -- Simula o clique na Bomb
                 else
-                    print("ClickDetector não encontrado na Bomb.")
+                    warn("Nenhum 'ClickDetector' encontrado na Bomb.")
                 end
             end)
-            wait(0.01) -- Controla a velocidade dos cliques
+            wait(0.05) -- Controle da velocidade dos cliques
         end
         print("Clicou na Bomb 100 vezes!")
     end
@@ -80,8 +75,8 @@ end
 
 -- Adicionando botão na aba Main
 Tabs.Main:AddButton({
-    Title = "Dupe Bomba",
-    Description = "Pega 100 bombas no inventário.",
+    Title = "Clique na Bomb 100 vezes",
+    Description = "Teleporta para a Bomb e clica nela 100 vezes",
     Callback = function()
         clickBomb100Times()
     end
