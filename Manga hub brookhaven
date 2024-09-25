@@ -22,20 +22,34 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local LocalPlayer = Players.LocalPlayer
 
--- Função para teleportar o jogador até a part "Bomb"
+-- Função para buscar a Bomb dentro de ClonedTools no ReplicatedStorage
+local function getBombFromReplicatedStorage()
+    local clonedTools = ReplicatedStorage:FindFirstChild("ClonedTools")
+    if clonedTools then
+        local bomb = clonedTools:FindFirstChild("Bomb")
+        if bomb then
+            return bomb
+        else
+            print("A 'Bomb' não foi encontrada em ClonedTools.")
+        end
+    else
+        print("A pasta 'ClonedTools' não foi encontrada no ReplicatedStorage.")
+    end
+    return nil
+end
+
+-- Função para teleportar o jogador até a Bomb
 local function teleportToBomb()
-    local bomb = workspace:FindFirstChild("Bomb")
+    local bomb = getBombFromReplicatedStorage()
     if bomb then
         LocalPlayer.Character.HumanoidRootPart.CFrame = bomb.CFrame
         print("Teleportado para a Bomb!")
-    else
-        print("A part 'Bomb' não foi encontrada.")
     end
 end
 
 -- Função para clicar na Bomb 100 vezes
 local function clickBomb100Times()
-    local bomb = workspace:FindFirstChild("Bomb")
+    local bomb = getBombFromReplicatedStorage()
     if bomb then
         teleportToBomb()
         for i = 1, 100 do
@@ -45,41 +59,16 @@ local function clickBomb100Times()
             wait(0.01) -- Controla a velocidade dos cliques, ajustado para ser rápido
         end
         print("Clicou na Bomb 100 vezes!")
-    else
-        print("A part 'Bomb' ou o ClickDetector não foi encontrada.")
     end
 end
 
 -- Adicionando botão na aba Main
 Tabs.Main:AddButton({
-    Title = "Teleportar e clicar na Bomb",
-    Description = "Teleporta e clica na Bomb 100 vezes.",
+    Title = "Clique na Bomb 100 vezes",
+    Description = "Teleporta para a Bomb e clica nela 100 vezes",
     Callback = function()
         clickBomb100Times()
     end
 })
 
--- Adicionando as funcionalidades de salvamento
-SaveManager:SetLibrary(Fluent)
-InterfaceManager:SetLibrary(Fluent)
-SaveManager:IgnoreThemeSettings()
-SaveManager:SetIgnoreIndexes({})
-InterfaceManager:SetFolder("MangaHub")
-SaveManager:SetFolder("MangaHub/Configs")
-
-InterfaceManager:BuildInterfaceSection(Tabs.Main)
-SaveManager:BuildConfigSection(Tabs.Main)
-
-InterfaceManager:BuildInterfaceSection(Tabs.Audio)
-SaveManager:BuildConfigSection(Tabs.Audio)
-
-InterfaceManager:BuildInterfaceSection(Tabs.TrollMap)
-SaveManager:BuildConfigSection(Tabs.TrollMap)
-
-Fluent:Notify({
-    Title = "Manga Hub",
-    Content = "O script foi carregado com sucesso.",
-    Duration = 8
-})
-
-SaveManager:LoadAutoloadConfig()
+Window:SelectTab(1)
