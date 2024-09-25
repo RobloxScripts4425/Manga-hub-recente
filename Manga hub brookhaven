@@ -23,7 +23,7 @@ local trollMapTab = Window:MakeTab({
 })
 
 -- Toggle para Noclip
-local noclipToggle = trollMapTab:AddToggle({
+trollMapTab:AddToggle({
     Name = "Noclip",
     Default = false,
     Callback = function(value)
@@ -32,7 +32,7 @@ local noclipToggle = trollMapTab:AddToggle({
             if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
                 LocalPlayer.Character.HumanoidRootPart.CanCollide = false
             end
-            wait(0.01) -- Ajuste para 0.01 segundos (10 milissegundos)
+            wait(0.01) -- 10 milissegundos
         end
         if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
             LocalPlayer.Character.HumanoidRootPart.CanCollide = true
