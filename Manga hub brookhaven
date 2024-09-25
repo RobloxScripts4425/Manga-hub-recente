@@ -13,6 +13,7 @@ local Window = Fluent:CreateWindow({
 })
 
 local Tabs = {
+    Main = Window:AddTab({ Title = "Main", Icon = "" }),
     Audio = Window:AddTab({ Title = "Áudio", Icon = "" }),
     TrollMap = Window:AddTab({ Title = "Troll de Mapa", Icon = "" })
 }
@@ -21,112 +22,40 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local LocalPlayer = Players.LocalPlayer
 
--- Função para reproduzir áudio para os outros jogadores
-local function playAudioForOthers(audioId)
-    local sniper = LocalPlayer.Character:FindFirstChild("Sniper")
-    if sniper then
-        local args = {
-            [1] = audioId,
-            [2] = sniper
-        }
-        ReplicatedStorage.RE:FindFirstChild("1Too1l"):InvokeServer(unpack(args))
+-- Função para teleportar o jogador até a part "Bomb"
+local function teleportToBomb()
+    local bomb = workspace:FindFirstChild("Bomb")
+    if bomb then
+        LocalPlayer.Character.HumanoidRootPart.CFrame = bomb.CFrame
+        print("Teleportado para a Bomb!")
     else
-        print("A Sniper precisa estar equipada para tocar o áudio.")
+        print("A part 'Bomb' não foi encontrada.")
     end
 end
 
--- TextBox para ID de Áudio
-local audioIdInput = Tabs.Audio:AddInput("AudioID", {
-    Title = "ID do Áudio",
-    Default = "",
-    Placeholder = "Coloque o ID do áudio aqui",
-    Callback = function(value)
-        print("ID do áudio atualizado:", value)
-    end
-})
-
--- Botão para ativar áudio
-Tabs.Audio:AddButton({
-    Title = "Ativar Áudio",
-    Description = "Ativa o áudio para os jogadores próximos.",
-    Callback = function()
-        local audioId = audioIdInput.Value
-        if audioId and audioId ~= "" then
-            playAudioForOthers(audioId)
-        else
-            print("Por favor, insira um ID de áudio válido.")
+-- Função para clicar na Bomb 100 vezes
+local function clickBomb100Times()
+    local bomb = workspace:FindFirstChild("Bomb")
+    if bomb then
+        teleportToBomb()
+        for i = 1, 100 do
+            pcall(function()
+                fireclickdetector(bomb.ClickDetector) -- Simula o clique na Bomb
+            end)
+            wait(0.01) -- Controla a velocidade dos cliques, ajustado para ser rápido
         end
-    end
-})
-
--- Variável para controlar o estado do Noclip
-local noclipEnabled = false
-
--- Função para ativar/desativar Noclip
-local function setNoclip(enabled)
-    noclipEnabled = enabled
-    if enabled then
-        for _, part in ipairs(LocalPlayer.Character:GetChildren()) do
-            if part:IsA("BasePart") then
-                part.CanCollide = false
-            end
-        end
-        print("Noclip ativado.")
+        print("Clicou na Bomb 100 vezes!")
     else
-        for _, part in ipairs(LocalPlayer.Character:GetChildren()) do
-            if part:IsA("BasePart") then
-                part.CanCollide = true
-            end
-        end
-        print("Noclip desativado.")
+        print("A part 'Bomb' ou o ClickDetector não foi encontrada.")
     end
 end
 
--- Toggle para Noclip
-local noclipToggle = Tabs.TrollMap:AddToggle("NoclipToggle", {
-    Title = "Noclip",
-    Default = false
-})
-
-noclipToggle:OnChanged(function()
-    setNoclip(noclipToggle.Value)
-end)
-
--- Botão de apagar o mapa
-Tabs.TrollMap:AddButton({
-    Title = "Apagar Mapa",
-    Description = "Apaga o mapa.",
+-- Adicionando botão na aba Main
+Tabs.Main:AddButton({
+    Title = "Teleportar e clicar na Bomb",
+    Description = "Teleporta e clica na Bomb 100 vezes.",
     Callback = function()
-        local success, err = pcall(function()
-            for _, part in ipairs(workspace:GetChildren()) do
-                if part:IsA("BasePart") and part.Name ~= "Baseplate" then
-                    part.Transparency = 1
-                    part.CanCollide = false
-                end
-            end
-        end)
-        if not success then
-            print("Erro ao apagar o mapa: " .. err)
-        end
-    end
-})
-
--- Botão de restaurar o mapa
-Tabs.TrollMap:AddButton({
-    Title = "Restaurar Mapa",
-    Description = "Restaura o mapa.",
-    Callback = function()
-        local success, err = pcall(function()
-            for _, part in ipairs(workspace:GetChildren()) do
-                if part:IsA("BasePart") then
-                    part.Transparency = 0
-                    part.CanCollide = true
-                end
-            end
-        end)
-        if not success then
-            print("Erro ao restaurar o mapa: " .. err)
-        end
+        clickBomb100Times()
     end
 })
 
@@ -137,6 +66,9 @@ SaveManager:IgnoreThemeSettings()
 SaveManager:SetIgnoreIndexes({})
 InterfaceManager:SetFolder("MangaHub")
 SaveManager:SetFolder("MangaHub/Configs")
+
+InterfaceManager:BuildInterfaceSection(Tabs.Main)
+SaveManager:BuildConfigSection(Tabs.Main)
 
 InterfaceManager:BuildInterfaceSection(Tabs.Audio)
 SaveManager:BuildConfigSection(Tabs.Audio)
@@ -151,25 +83,3 @@ Fluent:Notify({
 })
 
 SaveManager:LoadAutoloadConfig()
-
--- Criando o botão "Z"
-local screenGui = Instance.new("ScreenGui")
-screenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
-
-local toggleButton = Instance.new("TextButton")
-toggleButton.Size = UDim2.new(0, 50, 0, 50)
-toggleButton.Position = UDim2.new(1, -60, 1, -60) -- Posição no canto inferior direito
-toggleButton.Text = "Z"
-toggleButton.TextSize = 24
-toggleButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0) -- Cor vermelha
-toggleButton.BorderSizePixel = 0
-toggleButton.Parent = screenGui
-
--- Controlando a visibilidade do hub
-toggleButton.MouseButton1Click:Connect(function()
-    if Window.Visible then
-        Window:Hide()
-    else
-        Window:Show()
-    end
-end)
