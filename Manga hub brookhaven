@@ -42,8 +42,18 @@ end
 local function teleportToBomb()
     local bomb = getBombFromReplicatedStorage()
     if bomb then
-        LocalPlayer.Character.HumanoidRootPart.CFrame = bomb.CFrame
-        print("Teleportado para a Bomb!")
+        -- Checa se o modelo possui uma PrimaryPart
+        if bomb:IsA("Model") and bomb.PrimaryPart then
+            LocalPlayer.Character.HumanoidRootPart.CFrame = bomb.PrimaryPart.CFrame
+        else
+            -- Se não tiver PrimaryPart, tenta pegar a primeira peça (Part) dentro do modelo
+            local part = bomb:FindFirstChildWhichIsA("BasePart")
+            if part then
+                LocalPlayer.Character.HumanoidRootPart.CFrame = part.CFrame
+            else
+                print("Não foi possível encontrar uma peça na Bomb para teleportar.")
+            end
+        end
     end
 end
 
@@ -54,9 +64,15 @@ local function clickBomb100Times()
         teleportToBomb()
         for i = 1, 100 do
             pcall(function()
-                fireclickdetector(bomb.ClickDetector) -- Simula o clique na Bomb
+                -- Verifica se há um ClickDetector para clicar
+                local clickDetector = bomb:FindFirstChildWhichIsA("ClickDetector")
+                if clickDetector then
+                    fireclickdetector(clickDetector) -- Simula o clique na Bomb
+                else
+                    print("ClickDetector não encontrado na Bomb.")
+                end
             end)
-            wait(0.01) -- Controla a velocidade dos cliques, ajustado para ser rápido
+            wait(0.01) -- Controla a velocidade dos cliques
         end
         print("Clicou na Bomb 100 vezes!")
     end
@@ -64,8 +80,8 @@ end
 
 -- Adicionando botão na aba Main
 Tabs.Main:AddButton({
-    Title = "Clique na Bomb 100 vezes",
-    Description = "Teleporta para a Bomb e clica nela 100 vezes",
+    Title = "Dupe Bomba",
+    Description = "Pega 100 bombas no inventário.",
     Callback = function()
         clickBomb100Times()
     end
