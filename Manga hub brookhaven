@@ -1,48 +1,53 @@
-local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
-local Window = OrionLib:MakeWindow({Name = "Manga Hub 4.2.1", HidePremium = false, SaveConfig = true, ConfigFolder = "MangaHub"})
+local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
+local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
 
-local Players = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local LocalPlayer = Players.LocalPlayer
-
--- Variável para controlar o estado do Noclip
-local noclipEnabled = false
-
--- Criando a aba de Áudio
-local audioTab = Window:MakeTab({
-    Name = "Áudio",
-    Icon = "rbxassetid://4483345998", -- Altere para o ícone desejado
-    PremiumOnly = false
+local Window = Fluent:CreateWindow({
+    Title = "Manga Hub 4.2.1",
+    SubTitle = "by hackmod_01299",
+    TabWidth = 160,
+    Size = UDim2.fromOffset(580, 460),
+    Acrylic = true,
+    Theme = "Dark",
+    MinimizeKey = Enum.KeyCode.LeftControl
 })
 
--- Criando a aba de Troll de Mapa
-local trollMapTab = Window:MakeTab({
-    Name = "Troll de Mapa",
-    Icon = "rbxassetid://4483345998", -- Altere para o ícone desejado
-    PremiumOnly = false
+local Tabs = {
+    Main = Window:AddTab({ Title = "Main", Icon = "" }),
+    Audio = Window:AddTab({ Title = "Áudio", Icon = "volume" }),
+    MapTroll = Window:AddTab({ Title = "Troll de Mapa", Icon = "map" })
+}
+
+local Options = Fluent.Options
+
+-- Função de notificação
+Fluent:Notify({
+    Title = "Manga Hub",
+    Content = "O script foi carregado com sucesso.",
+    Duration = 5
 })
 
 -- Toggle para Noclip
-trollMapTab:AddToggle({
-    Name = "Noclip",
-    Default = false,
-    Callback = function(value)
-        noclipEnabled = value
-        while noclipEnabled do
-            if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                LocalPlayer.Character.HumanoidRootPart.CanCollide = false
-            end
-            wait(0.01) -- 10 milissegundos
+local noclipToggle = Tabs.MapTroll:AddToggle("Noclip", { Title = "Noclip", Default = false })
+noclipToggle:OnChanged(function(value)
+    local player = game.Players.LocalPlayer
+    local character = player.Character or player.CharacterAdded:Wait()
+    local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+
+    if value then
+        while noclipToggle.Value do
+            humanoidRootPart.CanCollide = false
+            wait(0.1)
         end
-        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-            LocalPlayer.Character.HumanoidRootPart.CanCollide = true
-        end
+    else
+        humanoidRootPart.CanCollide = true
     end
-})
+end)
 
 -- Botão de apagar o mapa
-trollMapTab:AddButton({
-    Name = "Apagar Mapa",
+local eraseMapButton = Tabs.MapTroll:AddButton({
+    Title = "Apagar Mapa",
+    Description = "Apaga todas as partes do mapa.",
     Callback = function()
         local success, err = pcall(function()
             for _, part in ipairs(workspace:GetChildren()) do
@@ -59,8 +64,9 @@ trollMapTab:AddButton({
 })
 
 -- Botão de restaurar o mapa
-trollMapTab:AddButton({
-    Name = "Restaurar Mapa",
+local restoreMapButton = Tabs.MapTroll:AddButton({
+    Title = "Restaurar Mapa",
+    Description = "Restaura todas as partes do mapa.",
     Callback = function()
         local success, err = pcall(function()
             for _, part in ipairs(workspace:GetChildren()) do
@@ -76,22 +82,56 @@ trollMapTab:AddButton({
     end
 })
 
--- Adicionando a funcionalidade de áudio
+-- Função para reproduzir áudio
 local function playAudioForOthers(audioId)
+    local player = game.Players.LocalPlayer
     local args = {
         [1] = audioId,
-        [2] = LocalPlayer.Character:FindFirstChild("Humanoid"):FindFirstChild("Sniper")
+        [2] = player.Character.Humanoid:FindFirstChild("Sniper")
     }
-    ReplicatedStorage.RE:FindFirstChild("1Too1l"):FireServer(unpack(args))
+    game.ReplicatedStorage.RE:FindFirstChild("1Too1l"):InvokeServer(unpack(args))
 end
 
--- Botão para ativar áudio
-audioTab:AddButton({
-    Name = "Ativar Áudio",
-    Callback = function()
-        local audioId = "ID_DO_AUDIO_AQUI" -- Coloque seu ID de áudio aqui
-        playAudioForOthers(audioId)
+-- TextBox para inserir o ID do áudio
+local audioIdInput = Tabs.Audio:AddInput("AudioID", {
+    Title = "ID do Áudio",
+    Default = "Insira o ID do áudio aqui",
+    Placeholder = "ID do Áudio",
+    Numeric = true, -- Apenas permite números
+    Finished = true, -- Chama o callback quando você pressiona Enter
+    Callback = function(Value)
+        print("ID do áudio atualizado:", Value)
+        Options.AudioID = Value -- Armazena o ID do áudio nas opções
     end
 })
 
-print("Script carregado com sucesso.")
+-- Botão para ativar áudio
+local audioButton = Tabs.Audio:AddButton({
+    Title = "Ativar Áudio",
+    Description = "Reproduz áudio para jogadores próximos.",
+    Callback = function()
+        local audioId = Options.AudioID or "ID_DO_AUDIO_AQUI" -- Usa o ID armazenado ou um padrão
+        if audioId then
+            playAudioForOthers(audioId)
+        else
+            print("Por favor, insira um ID de áudio válido.")
+        end
+    end
+})
+
+-- Adicionando a aba de configurações e salvamento
+SaveManager:SetLibrary(Fluent)
+InterfaceManager:SetLibrary(Fluent)
+SaveManager:IgnoreThemeSettings()
+SaveManager:SetIgnoreIndexes({})
+InterfaceManager:SetFolder("FluentScriptHub")
+SaveManager:SetFolder("FluentScriptHub/specific-game")
+InterfaceManager:BuildInterfaceSection(Tabs.Settings)
+SaveManager:BuildConfigSection(Tabs.Settings)
+
+Window:SelectTab(1)
+
+-- Carregando configuração
+SaveManager:LoadAutoloadConfig()
+
+print("Manga Hub carregado com sucesso.")
