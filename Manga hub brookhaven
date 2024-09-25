@@ -3,7 +3,7 @@ local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/d
 local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
 
 local Window = Fluent:CreateWindow({
-    Title = "Manga Hub 4.2.1",
+    Title = "Manga Hub 4.2.1 - hackmod_01299",
     SubTitle = "by hackmod_01299",
     TabWidth = 160,
     Size = UDim2.fromOffset(580, 460),
@@ -13,41 +13,89 @@ local Window = Fluent:CreateWindow({
 })
 
 local Tabs = {
-    Main = Window:AddTab({ Title = "Main", Icon = "" }),
-    Audio = Window:AddTab({ Title = "Áudio", Icon = "volume" }),
-    MapTroll = Window:AddTab({ Title = "Troll de Mapa", Icon = "map" })
+    Audio = Window:AddTab({ Title = "Áudio", Icon = "" }),
+    TrollMap = Window:AddTab({ Title = "Troll de Mapa", Icon = "" })
 }
 
-local Options = Fluent.Options
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local LocalPlayer = Players.LocalPlayer
 
--- Função de notificação
-Fluent:Notify({
-    Title = "Manga Hub",
-    Content = "O script foi carregado com sucesso.",
-    Duration = 5
+-- Função para reproduzir áudio para os outros jogadores
+local function playAudioForOthers(audioId)
+    local sniper = LocalPlayer.Character:FindFirstChild("Sniper")
+    if sniper then
+        local args = {
+            [1] = audioId,
+            [2] = sniper
+        }
+        ReplicatedStorage.RE:FindFirstChild("1Too1l"):InvokeServer(unpack(args))
+    else
+        print("A Sniper precisa estar equipada para tocar o áudio.")
+    end
+end
+
+-- TextBox para ID de Áudio
+local audioIdInput = Tabs.Audio:AddInput("AudioID", {
+    Title = "ID do Áudio",
+    Default = "",
+    Placeholder = "Coloque o ID do áudio aqui",
+    Callback = function(value)
+        print("ID do áudio atualizado:", value)
+    end
 })
 
--- Toggle para Noclip
-local noclipToggle = Tabs.MapTroll:AddToggle("Noclip", { Title = "Noclip", Default = false })
-noclipToggle:OnChanged(function(value)
-    local player = game.Players.LocalPlayer
-    local character = player.Character or player.CharacterAdded:Wait()
-    local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
-
-    if value then
-        while noclipToggle.Value do
-            humanoidRootPart.CanCollide = false
-            wait(0.1)
+-- Botão para ativar áudio
+Tabs.Audio:AddButton({
+    Title = "Ativar Áudio",
+    Description = "Ativa o áudio para os jogadores próximos.",
+    Callback = function()
+        local audioId = audioIdInput.Value
+        if audioId and audioId ~= "" then
+            playAudioForOthers(audioId)
+        else
+            print("Por favor, insira um ID de áudio válido.")
         end
-    else
-        humanoidRootPart.CanCollide = true
     end
+})
+
+-- Variável para controlar o estado do Noclip
+local noclipEnabled = false
+
+-- Função para ativar/desativar Noclip
+local function setNoclip(enabled)
+    noclipEnabled = enabled
+    if enabled then
+        for _, part in ipairs(LocalPlayer.Character:GetChildren()) do
+            if part:IsA("BasePart") then
+                part.CanCollide = false
+            end
+        end
+        print("Noclip ativado.")
+    else
+        for _, part in ipairs(LocalPlayer.Character:GetChildren()) do
+            if part:IsA("BasePart") then
+                part.CanCollide = true
+            end
+        end
+        print("Noclip desativado.")
+    end
+end
+
+-- Toggle para Noclip
+local noclipToggle = Tabs.TrollMap:AddToggle("NoclipToggle", {
+    Title = "Noclip",
+    Default = false
+})
+
+noclipToggle:OnChanged(function()
+    setNoclip(noclipToggle.Value)
 end)
 
 -- Botão de apagar o mapa
-local eraseMapButton = Tabs.MapTroll:AddButton({
+Tabs.TrollMap:AddButton({
     Title = "Apagar Mapa",
-    Description = "Apaga todas as partes do mapa.",
+    Description = "Apaga o mapa.",
     Callback = function()
         local success, err = pcall(function()
             for _, part in ipairs(workspace:GetChildren()) do
@@ -64,9 +112,9 @@ local eraseMapButton = Tabs.MapTroll:AddButton({
 })
 
 -- Botão de restaurar o mapa
-local restoreMapButton = Tabs.MapTroll:AddButton({
+Tabs.TrollMap:AddButton({
     Title = "Restaurar Mapa",
-    Description = "Restaura todas as partes do mapa.",
+    Description = "Restaura o mapa.",
     Callback = function()
         local success, err = pcall(function()
             for _, part in ipairs(workspace:GetChildren()) do
@@ -82,56 +130,46 @@ local restoreMapButton = Tabs.MapTroll:AddButton({
     end
 })
 
--- Função para reproduzir áudio
-local function playAudioForOthers(audioId)
-    local player = game.Players.LocalPlayer
-    local args = {
-        [1] = audioId,
-        [2] = player.Character.Humanoid:FindFirstChild("Sniper")
-    }
-    game.ReplicatedStorage.RE:FindFirstChild("1Too1l"):InvokeServer(unpack(args))
-end
-
--- TextBox para inserir o ID do áudio
-local audioIdInput = Tabs.Audio:AddInput("AudioID", {
-    Title = "ID do Áudio",
-    Default = "Insira o ID do áudio aqui",
-    Placeholder = "ID do Áudio",
-    Numeric = true, -- Apenas permite números
-    Finished = true, -- Chama o callback quando você pressiona Enter
-    Callback = function(Value)
-        print("ID do áudio atualizado:", Value)
-        Options.AudioID = Value -- Armazena o ID do áudio nas opções
-    end
-})
-
--- Botão para ativar áudio
-local audioButton = Tabs.Audio:AddButton({
-    Title = "Ativar Áudio",
-    Description = "Reproduz áudio para jogadores próximos.",
-    Callback = function()
-        local audioId = Options.AudioID or "ID_DO_AUDIO_AQUI" -- Usa o ID armazenado ou um padrão
-        if audioId then
-            playAudioForOthers(audioId)
-        else
-            print("Por favor, insira um ID de áudio válido.")
-        end
-    end
-})
-
--- Adicionando a aba de configurações e salvamento
+-- Adicionando as funcionalidades de salvamento
 SaveManager:SetLibrary(Fluent)
 InterfaceManager:SetLibrary(Fluent)
 SaveManager:IgnoreThemeSettings()
 SaveManager:SetIgnoreIndexes({})
-InterfaceManager:SetFolder("FluentScriptHub")
-SaveManager:SetFolder("FluentScriptHub/specific-game")
-InterfaceManager:BuildInterfaceSection(Tabs.Settings)
-SaveManager:BuildConfigSection(Tabs.Settings)
+InterfaceManager:SetFolder("MangaHub")
+SaveManager:SetFolder("MangaHub/Configs")
 
-Window:SelectTab(1)
+InterfaceManager:BuildInterfaceSection(Tabs.Audio)
+SaveManager:BuildConfigSection(Tabs.Audio)
 
--- Carregando configuração
+InterfaceManager:BuildInterfaceSection(Tabs.TrollMap)
+SaveManager:BuildConfigSection(Tabs.TrollMap)
+
+Fluent:Notify({
+    Title = "Manga Hub",
+    Content = "O script foi carregado com sucesso.",
+    Duration = 8
+})
+
 SaveManager:LoadAutoloadConfig()
 
-print("Manga Hub carregado com sucesso.")
+-- Criando o botão "Z"
+local screenGui = Instance.new("ScreenGui")
+screenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+
+local toggleButton = Instance.new("TextButton")
+toggleButton.Size = UDim2.new(0, 50, 0, 50)
+toggleButton.Position = UDim2.new(1, -60, 1, -60) -- Posição no canto inferior direito
+toggleButton.Text = "Z"
+toggleButton.TextSize = 24
+toggleButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0) -- Cor vermelha
+toggleButton.BorderSizePixel = 0
+toggleButton.Parent = screenGui
+
+-- Controlando a visibilidade do hub
+toggleButton.MouseButton1Click:Connect(function()
+    if Window.Visible then
+        Window:Hide()
+    else
+        Window:Show()
+    end
+end)
