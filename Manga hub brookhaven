@@ -1,11 +1,107 @@
 local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
 local Window = OrionLib:MakeWindow({Name = "Manga Hub 4.2.1", HidePremium = false, SaveConfig = true, ConfigFolder = "MangaHub"})
 
+-- Variável para controlar o estado do Noclip
+local noclipEnabled = false
+
+-- Função que faz o loop de desativação/ativação de colisão
+local function noclipLoop()
+    spawn(function()
+        while noclipEnabled do
+            local player = game.Players.LocalPlayer
+            local character = player.Character or player.CharacterAdded:Wait()
+            local humanoid = character:WaitForChild("Humanoid")
+
+            -- Desativar colisão
+            for _, part in pairs(character:GetChildren()) do
+                if part:IsA("BasePart") then
+                    part.CanCollide = false
+                end
+            end
+
+            wait(0.1) -- Intervalo de 0.1 segundos entre cada iteração
+        end
+    end)
+end
+
+-- Função para ativar a colisão novamente
+local function enableCollision()
+    local player = game.Players.LocalPlayer
+    local character = player.Character or player.CharacterAdded:Wait()
+
+    -- Ativar a colisão novamente
+    for _, part in pairs(character:GetChildren()) do
+        if part:IsA("BasePart") then
+            part.CanCollide = true
+        end
+    end
+end
+
+-- Função para tocar o áudio FE
+local function playFEAudio(audioId)
+    local player = game.Players.LocalPlayer
+    local character = player.Character or player.CharacterAdded:Wait()
+    local tool = game.ReplicatedStorage:WaitForChild("Sniper")
+
+    -- Pega a sniper e equipa automaticamente
+    local args = {
+        [1] = "PickingTools",
+        [2] = "Sniper"
+    }
+    game:GetService("ReplicatedStorage").RE:FindFirstChild("1Too1l"):InvokeServer(unpack(args))
+
+    wait(0.5) -- Aguardar o item ser equipado
+
+    -- Tocar o áudio para outros players, mas o jogador local não escuta
+    local sound = Instance.new("Sound")
+    sound.SoundId = "rbxassetid://" .. audioId
+    sound.Volume = 10
+    sound.Looped = false
+    sound.PlayOnRemove = true
+    sound.Parent = tool
+
+    sound:Play()
+
+    -- Notificação de sucesso
+    OrionLib:MakeNotification({
+        Name = "Áudio FE Ativado",
+        Content = "Áudio tocando para outros jogadores.",
+        Image = "rbxassetid://4483345998",
+        Time = 3
+    })
+end
+
 -- Aba "Jogador"
 local PlayerTab = Window:MakeTab({
     Name = "Jogador",
     Icon = "rbxassetid://4483345998",
     PremiumOnly = false
+})
+
+-- Toggle para Noclip
+PlayerTab:AddToggle({
+    Name = "Noclip",
+    Default = false,
+    Callback = function(Value)
+        noclipEnabled = Value
+        if noclipEnabled then
+            noclipLoop() -- Iniciar loop do noclip
+            OrionLib:MakeNotification({
+                Name = "Noclip Ativado",
+                Content = "Colisão desativada.",
+                Image = "rbxassetid://4483345998",
+                Time = 3
+            })
+        else
+            enableCollision() -- Ativar a colisão novamente
+            OrionLib:MakeNotification({
+                Name = "Noclip Desativado",
+                Content = "Colisão ativada novamente.",
+                Image = "rbxassetid://4483345998",
+                Time = 3
+            })
+        end
+    end    
 })
 
 -- Aba "Áudio"
@@ -15,74 +111,58 @@ local AudioTab = Window:MakeTab({
     PremiumOnly = false
 })
 
--- Textbox para o ID do áudio
-local AudioId
+-- Textbox para inserir o ID do áudio
 AudioTab:AddTextbox({
     Name = "ID do Áudio",
     Default = "",
     TextDisappear = true,
-    Callback = function(Value)
-        AudioId = Value
-    end    
+    Callback = function(audioId)
+        playFEAudio(audioId) -- Chama a função de tocar o áudio FE
+    end
 })
 
--- Função para pegar e equipar a Sniper
-local function getAndEquipSniper()
-    local args = {
-        [1] = "PickingTools",
-        [2] = "Sniper"
-    }
-    local replicatedStorage = game:GetService("ReplicatedStorage")
-    replicatedStorage.RE:FindFirstChild("1Too1l"):InvokeServer(unpack(args))
+-- Aba "Troll de mapa"
+local TrollMapTab = Window:MakeTab({
+    Name = "Troll de mapa",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
 
-    local player = game.Players.LocalPlayer
-    local backpack = player:WaitForChild("Backpack")
-    local sniper = backpack:FindFirstChild("Sniper")
-
-    if sniper then
-        player.Character.Humanoid:EquipTool(sniper)
-        return sniper
-    else
-        OrionLib:MakeNotification({
-            Name = "Erro",
-            Content = "Sniper não encontrada no inventário!",
-            Image = "rbxassetid://4483345998",
-            Time = 5
-        })
-        return nil
-    end
-end
-
--- Botão para ativar o áudio FE
-AudioTab:AddButton({
-    Name = "Ativar Áudio (FE)",
+-- Botão para apagar o chão (FE)
+TrollMapTab:AddButton({
+    Name = "Apagar Mapa",
     Callback = function()
-        local sniper = getAndEquipSniper()
-        if sniper and AudioId then
-            local sound = Instance.new("Sound")
-            sound.SoundId = "rbxassetid://" .. AudioId
-            sound.Volume = 10
-            sound.Parent = sniper
-            sound:Play()
-
-            -- Notificação de áudio tocando
-            OrionLib:MakeNotification({
-                Name = "Áudio",
-                Content = "Áudio tocando para outros jogadores",
-                Image = "rbxassetid://4483345998",
-                Time = 3
-            })
-
-            -- Remover o som após 3 segundos (anti-áudio do Brookhaven)
-            game:GetService("Debris"):AddItem(sound, 3)
-        else
-            OrionLib:MakeNotification({
-                Name = "Erro",
-                Content = "ID de áudio ou Sniper inválidos!",
-                Image = "rbxassetid://4483345998",
-                Time = 5
-            })
+        for _, part in pairs(workspace:GetDescendants()) do
+            if part:IsA("BasePart") and part.Name == "Base" then
+                part.Transparency = 1
+                part.CanCollide = false
+            end
         end
+        OrionLib:MakeNotification({
+            Name = "Mapa Apagado",
+            Content = "Chão invisível, mas com colisão.",
+            Image = "rbxassetid://4483345998",
+            Time = 3
+        })
+    end
+})
+
+-- Botão para restaurar o chão
+TrollMapTab:AddButton({
+    Name = "Restaurar Mapa",
+    Callback = function()
+        for _, part in pairs(workspace:GetDescendants()) do
+            if part:IsA("BasePart") and part.Name == "Base" then
+                part.Transparency = 0
+                part.CanCollide = true
+            end
+        end
+        OrionLib:MakeNotification({
+            Name = "Mapa Restaurado",
+            Content = "Chão visível novamente.",
+            Image = "rbxassetid://4483345998",
+            Time = 3
+        })
     end
 })
 
