@@ -1,64 +1,11 @@
 local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
 local Window = OrionLib:MakeWindow({Name = "Manga Hub 4.2.1", HidePremium = false, SaveConfig = true, ConfigFolder = "MangaHub"})
 
-local replicatedStorage = game:GetService("ReplicatedStorage")
-
--- Crie um RemoteEvent se ele não existir
-local remoteEvent = Instance.new("RemoteEvent")
-remoteEvent.Name = "RE"
-remoteEvent.Parent = replicatedStorage
-
--- Função para apagar o chão
-local function eraseGround()
-    for _, part in pairs(workspace:GetChildren()) do
-        if part:IsA("BasePart") then
-            part.Transparency = 1 -- Torna invisível
-            part.CanCollide = false -- Desativa colisão
-        end
-    end
-end
-
--- Função para restaurar o chão
-local function restoreGround()
-    for _, part in pairs(workspace:GetChildren()) do
-        if part:IsA("BasePart") then
-            part.Transparency = 0 -- Torna visível
-            part.CanCollide = true -- Restaura colisão
-        end
-    end
-end
-
--- Função para tocar áudio
-local function playAudioForOthers(audioId)
-    local sound = Instance.new("Sound")
-    sound.SoundId = "rbxassetid://" .. audioId
-    sound.Parent = workspace
-    sound:Play()
-    wait(3) -- Toca por 3 segundos
-    sound:Destroy() -- Remove o som após tocar
-end
-
--- Aba "Troll de Mapa"
-local TrollTab = Window:MakeTab({
-    Name = "Troll de Mapa",
+-- Aba "Jogador"
+local PlayerTab = Window:MakeTab({
+    Name = "Jogador",
     Icon = "rbxassetid://4483345998",
     PremiumOnly = false
-})
-
--- Botão para apagar o chão
-TrollTab:AddButton({
-    Name = "Apagar Chão",
-    Callback = function()
-        remoteEvent:FireServer("EraseGround") -- Chama o servidor para apagar o chão
-    end
-})
-
--- Botão para restaurar o chão
-TrollTab:AddButton({
-    Name = "Restaurar Chão",
-    Callback = function()
-        remoteEvent:FireServer("RestoreGround") -- Chama o servidor para restaurar o chão
-    end
 })
 
 -- Aba "Áudio"
@@ -68,35 +15,75 @@ local AudioTab = Window:MakeTab({
     PremiumOnly = false
 })
 
--- TextBox para inserir o ID do áudio
+-- Textbox para o ID do áudio
+local AudioId
 AudioTab:AddTextbox({
     Name = "ID do Áudio",
     Default = "",
     TextDisappear = true,
-    Callback = function(value)
-        local audioId = value
-        -- Botão para ativar o áudio
-        AudioTab:AddButton({
-            Name = "Ativar Áudio",
-            Callback = function()
-                if audioId then
-                    playAudioForOthers(audioId) -- Chama a função para tocar o áudio para outros jogadores
-                end
-            end
-        })
-    end
+    Callback = function(Value)
+        AudioId = Value
+    end    
 })
 
--- Conectar as funções do servidor
-local function onServerEvent(player, action)
-    if action == "EraseGround" then
-        eraseGround()
-    elseif action == "RestoreGround" then
-        restoreGround()
+-- Função para pegar e equipar a Sniper
+local function getAndEquipSniper()
+    local args = {
+        [1] = "PickingTools",
+        [2] = "Sniper"
+    }
+    local replicatedStorage = game:GetService("ReplicatedStorage")
+    replicatedStorage.RE:FindFirstChild("1Too1l"):InvokeServer(unpack(args))
+
+    local player = game.Players.LocalPlayer
+    local backpack = player:WaitForChild("Backpack")
+    local sniper = backpack:FindFirstChild("Sniper")
+
+    if sniper then
+        player.Character.Humanoid:EquipTool(sniper)
+        return sniper
+    else
+        OrionLib:MakeNotification({
+            Name = "Erro",
+            Content = "Sniper não encontrada no inventário!",
+            Image = "rbxassetid://4483345998",
+            Time = 5
+        })
+        return nil
     end
 end
 
--- Conectar a função ao evento do servidor
-remoteEvent.OnServerEvent:Connect(onServerEvent)
+-- Botão para ativar o áudio FE
+AudioTab:AddButton({
+    Name = "Ativar Áudio (FE)",
+    Callback = function()
+        local sniper = getAndEquipSniper()
+        if sniper and AudioId then
+            local sound = Instance.new("Sound")
+            sound.SoundId = "rbxassetid://" .. AudioId
+            sound.Volume = 10
+            sound.Parent = sniper
+            sound:Play()
+
+            -- Notificação de áudio tocando
+            OrionLib:MakeNotification({
+                Name = "Áudio",
+                Content = "Áudio tocando para outros jogadores",
+                Image = "rbxassetid://4483345998",
+                Time = 3
+            })
+
+            -- Remover o som após 3 segundos (anti-áudio do Brookhaven)
+            game:GetService("Debris"):AddItem(sound, 3)
+        else
+            OrionLib:MakeNotification({
+                Name = "Erro",
+                Content = "ID de áudio ou Sniper inválidos!",
+                Image = "rbxassetid://4483345998",
+                Time = 5
+            })
+        end
+    end
+})
 
 OrionLib:Init()
