@@ -1,169 +1,97 @@
 local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
 local Window = OrionLib:MakeWindow({Name = "Manga Hub 4.2.1", HidePremium = false, SaveConfig = true, ConfigFolder = "MangaHub"})
 
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local LocalPlayer = Players.LocalPlayer
+
 -- Variável para controlar o estado do Noclip
 local noclipEnabled = false
 
--- Função que faz o loop de desativação/ativação de colisão
-local function noclipLoop()
-    spawn(function()
-        while noclipEnabled do
-            local player = game.Players.LocalPlayer
-            local character = player.Character or player.CharacterAdded:Wait()
-            local humanoid = character:WaitForChild("Humanoid")
+-- Criando a aba de Áudio
+local audioTab = Window:MakeTab({
+    Name = "Áudio",
+    Icon = "rbxassetid://4483345998", -- Altere para o ícone desejado
+    PremiumOnly = false
+})
 
-            -- Desativar colisão
-            for _, part in pairs(character:GetChildren()) do
-                if part:IsA("BasePart") then
-                    part.CanCollide = false
-                end
-            end
-
-            wait(0.1) -- Intervalo de 0.1 segundos entre cada iteração
-        end
-    end)
-end
-
--- Função para ativar a colisão novamente
-local function enableCollision()
-    local player = game.Players.LocalPlayer
-    local character = player.Character or player.CharacterAdded:Wait()
-
-    -- Ativar a colisão novamente
-    for _, part in pairs(character:GetChildren()) do
-        if part:IsA("BasePart") then
-            part.CanCollide = true
-        end
-    end
-end
-
--- Função para tocar o áudio FE
-local function playFEAudio(audioId)
-    local player = game.Players.LocalPlayer
-    local character = player.Character or player.CharacterAdded:Wait()
-    local tool = game.ReplicatedStorage:WaitForChild("Sniper")
-
-    -- Pega a sniper e equipa automaticamente
-    local args = {
-        [1] = "PickingTools",
-        [2] = "Sniper"
-    }
-    game:GetService("ReplicatedStorage").RE:FindFirstChild("1Too1l"):InvokeServer(unpack(args))
-
-    wait(0.5) -- Aguardar o item ser equipado
-
-    -- Tocar o áudio para outros players, mas o jogador local não escuta
-    local sound = Instance.new("Sound")
-    sound.SoundId = "rbxassetid://" .. audioId
-    sound.Volume = 10
-    sound.Looped = false
-    sound.PlayOnRemove = true
-    sound.Parent = tool
-
-    sound:Play()
-
-    -- Notificação de sucesso
-    OrionLib:MakeNotification({
-        Name = "Áudio FE Ativado",
-        Content = "Áudio tocando para outros jogadores.",
-        Image = "rbxassetid://4483345998",
-        Time = 3
-    })
-end
-
--- Aba "Jogador"
-local PlayerTab = Window:MakeTab({
-    Name = "Jogador",
-    Icon = "rbxassetid://4483345998",
+-- Criando a aba de Troll de Mapa
+local trollMapTab = Window:MakeTab({
+    Name = "Troll de Mapa",
+    Icon = "rbxassetid://4483345998", -- Altere para o ícone desejado
     PremiumOnly = false
 })
 
 -- Toggle para Noclip
-PlayerTab:AddToggle({
+local noclipToggle = trollMapTab:AddToggle({
     Name = "Noclip",
     Default = false,
-    Callback = function(Value)
-        noclipEnabled = Value
-        if noclipEnabled then
-            noclipLoop() -- Iniciar loop do noclip
-            OrionLib:MakeNotification({
-                Name = "Noclip Ativado",
-                Content = "Colisão desativada.",
-                Image = "rbxassetid://4483345998",
-                Time = 3
-            })
-        else
-            enableCollision() -- Ativar a colisão novamente
-            OrionLib:MakeNotification({
-                Name = "Noclip Desativado",
-                Content = "Colisão ativada novamente.",
-                Image = "rbxassetid://4483345998",
-                Time = 3
-            })
+    Callback = function(value)
+        noclipEnabled = value
+        while noclipEnabled do
+            if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                LocalPlayer.Character.HumanoidRootPart.CanCollide = false
+            end
+            wait(0.01) -- Ajuste para 0.01 segundos (10 milissegundos)
         end
-    end    
-})
-
--- Aba "Áudio"
-local AudioTab = Window:MakeTab({
-    Name = "Áudio",
-    Icon = "rbxassetid://4483345998",
-    PremiumOnly = false
-})
-
--- Textbox para inserir o ID do áudio
-AudioTab:AddTextbox({
-    Name = "ID do Áudio",
-    Default = "",
-    TextDisappear = true,
-    Callback = function(audioId)
-        playFEAudio(audioId) -- Chama a função de tocar o áudio FE
+        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            LocalPlayer.Character.HumanoidRootPart.CanCollide = true
+        end
     end
 })
 
--- Aba "Troll de mapa"
-local TrollMapTab = Window:MakeTab({
-    Name = "Troll de mapa",
-    Icon = "rbxassetid://4483345998",
-    PremiumOnly = false
-})
-
--- Botão para apagar o chão (FE)
-TrollMapTab:AddButton({
+-- Botão de apagar o mapa
+trollMapTab:AddButton({
     Name = "Apagar Mapa",
     Callback = function()
-        for _, part in pairs(workspace:GetDescendants()) do
-            if part:IsA("BasePart") and part.Name == "Base" then
-                part.Transparency = 1
-                part.CanCollide = false
+        local success, err = pcall(function()
+            for _, part in ipairs(workspace:GetChildren()) do
+                if part:IsA("BasePart") and part.Name ~= "Baseplate" then
+                    part.Transparency = 1
+                    part.CanCollide = false
+                end
             end
+        end)
+        if not success then
+            print("Erro ao apagar o mapa: " .. err)
         end
-        OrionLib:MakeNotification({
-            Name = "Mapa Apagado",
-            Content = "Chão invisível, mas com colisão.",
-            Image = "rbxassetid://4483345998",
-            Time = 3
-        })
     end
 })
 
--- Botão para restaurar o chão
-TrollMapTab:AddButton({
+-- Botão de restaurar o mapa
+trollMapTab:AddButton({
     Name = "Restaurar Mapa",
     Callback = function()
-        for _, part in pairs(workspace:GetDescendants()) do
-            if part:IsA("BasePart") and part.Name == "Base" then
-                part.Transparency = 0
-                part.CanCollide = true
+        local success, err = pcall(function()
+            for _, part in ipairs(workspace:GetChildren()) do
+                if part:IsA("BasePart") then
+                    part.Transparency = 0
+                    part.CanCollide = true
+                end
             end
+        end)
+        if not success then
+            print("Erro ao restaurar o mapa: " .. err)
         end
-        OrionLib:MakeNotification({
-            Name = "Mapa Restaurado",
-            Content = "Chão visível novamente.",
-            Image = "rbxassetid://4483345998",
-            Time = 3
-        })
     end
 })
 
-OrionLib:Init()
+-- Adicionando a funcionalidade de áudio
+local function playAudioForOthers(audioId)
+    local args = {
+        [1] = audioId,
+        [2] = LocalPlayer.Character:FindFirstChild("Humanoid"):FindFirstChild("Sniper")
+    }
+    ReplicatedStorage.RE:FindFirstChild("1Too1l"):FireServer(unpack(args))
+end
+
+-- Botão para ativar áudio
+audioTab:AddButton({
+    Name = "Ativar Áudio",
+    Callback = function()
+        local audioId = "ID_DO_AUDIO_AQUI" -- Coloque seu ID de áudio aqui
+        playAudioForOthers(audioId)
+    end
+})
+
+print("Script carregado com sucesso.")
