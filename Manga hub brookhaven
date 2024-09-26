@@ -1,85 +1,63 @@
-local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
-local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
-local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
+-- Configurando a interface usando Fluent Library
+local Library = loadstring(game:HttpGet("link-fluent-library-aqui"))()
+local Window = Library:CreateWindow("Manga Hub")
+local Tab = Window:AddTab("Main")
+local player = game:GetService("Players").LocalPlayer
 
-local Window = Fluent:CreateWindow({
-    Title = "Manga Hub 4.2.1 - hackmod_01299",
-    SubTitle = "by hackmod_01299",
-    TabWidth = 160,
-    Size = UDim2.fromOffset(580, 460),
-    Acrylic = true,
-    Theme = "Dark",
-    MinimizeKey = Enum.KeyCode.LeftControl
-})
+-- TextBox para o ID do som
+local soundID = 9110814983 -- ID inicial padrão do som
+Tab:AddTextbox("ID do Som", "Insira o ID", function(value)
+    soundID = tonumber(value) -- Converte o valor digitado em número e armazena
+end)
 
-local Tabs = {
-    Main = Window:AddTab({ Title = "Main", Icon = "" }),
-    Audio = Window:AddTab({ Title = "Áudio", Icon = "" }),
-    TrollMap = Window:AddTab({ Title = "Troll de Mapa", Icon = "" })
-}
+-- Função para pegar e equipar a Sniper
+local function equipSniper()
+    local args = {
+        [1] = "PickingTools",
+        [2] = "Sniper"
+    }
+    game:GetService("ReplicatedStorage").RE:FindFirstChild("1Too1l"):InvokeServer(unpack(args))
 
-local Players = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local LocalPlayer = Players.LocalPlayer
-
--- Função para buscar a Bomb dentro de ClonedTools no ReplicatedStorage
-local function getBombFromReplicatedStorage()
-    local clonedTools = ReplicatedStorage:FindFirstChild("ClonedTools")
-    if clonedTools then
-        local bomb = clonedTools:FindFirstChild("Bomb")
-        if bomb then
-            return bomb
-        else
-            warn("'Bomb' não foi encontrada em 'ClonedTools'.")
-        end
-    else
-        warn("'ClonedTools' não foi encontrado no 'ReplicatedStorage'.")
-    end
-    return nil
+    -- Equipando automaticamente a Sniper quando for adicionada à mochila
+    local backpack = player:WaitForChild("Backpack")
+    local sniper = backpack:WaitForChild("Sniper")
+    player.Character.Humanoid:EquipTool(sniper)
 end
 
--- Função para teleportar o jogador até a Bomb
-local function teleportToBomb()
-    local bomb = getBombFromReplicatedStorage()
-    if bomb then
-        -- Verifica se há uma BasePart válida dentro do modelo Bomb
-        local part = bomb:FindFirstChildWhichIsA("BasePart")
-        if part then
-            LocalPlayer.Character.HumanoidRootPart.CFrame = part.CFrame + Vector3.new(0, 3, 0) -- Teleporta o jogador 3 unidades acima da Bomb
-        else
-            warn("Nenhuma 'BasePart' foi encontrada no modelo 'Bomb'.")
-        end
-    end
-end
+-- Botão para ativar e atirar com a Sniper usando o som customizado
+Tab:AddButton("Ativar Sniper e Atirar", function()
+    equipSniper() -- Pega e equipa a Sniper
 
--- Função para clicar na Bomb 100 vezes
-local function clickBomb100Times()
-    local bomb = getBombFromReplicatedStorage()
-    if bomb then
-        teleportToBomb() -- Primeiro, teleporta o jogador até a Bomb
-        for i = 1, 100 do
-            pcall(function()
-                -- Procura por um ClickDetector na Bomb e simula o clique
-                local clickDetector = bomb:FindFirstChildWhichIsA("ClickDetector")
-                if clickDetector then
-                    fireclickdetector(clickDetector) -- Simula o clique na Bomb
-                else
-                    warn("Nenhum 'ClickDetector' encontrado na Bomb.")
-                end
-            end)
-            wait(0.05) -- Controle da velocidade dos cliques
-        end
-        print("Clicou na Bomb 100 vezes!")
-    end
-end
+    -- Script para disparar a Sniper com o som customizado
+    local sniperHandle = player.Character:FindFirstChild("Sniper").Handle
 
--- Adicionando botão na aba Main
-Tabs.Main:AddButton({
-    Title = "Clique na Bomb 100 vezes",
-    Description = "Teleporta para a Bomb e clica nela 100 vezes",
-    Callback = function()
-        clickBomb100Times()
-    end
-})
+    -- Argumentos para disparo com o som customizado
+    local argsShoot = {
+        [1] = workspace.Model.Street.Street, -- Alvo do tiro
+        [2] = sniperHandle, -- Referência para a Sniper
+        [3] = Vector3.new(0, 0.42500001192092896, -3.299999952316284), -- Posição inicial do tiro
+        [4] = Vector3.new(-64.96444702148438, 0.02500009536743164, -53.974647521972656), -- Direção do tiro
+        [5] = player.Character.Sniper.GunScript_Local.MuzzleEffect, -- Efeito da boca do cano
+        [6] = player.Character.Sniper.GunScript_Local.HitEffect, -- Efeito ao atingir
+        [7] = soundID, -- ID do som customizado inserido
+        [8] = 9110129480, -- Outro ID relacionado à animação ou som
+        [9] = { [1] = false }, -- Parâmetro relacionado ao estado do tiro
+        [10] = {
+            [1] = 25, -- Dano ou força do tiro
+            [2] = Vector3.new(0.25, 0.25, 100), -- Velocidade e direção do tiro
+            [3] = BrickColor.new(24), -- Cor do impacto
+            [4] = 0.25, -- Tamanho do projétil
+            [5] = Enum.Material.SmoothPlastic, -- Material do projétil
+            [6] = 0.25 -- Outra configuração de tamanho ou impacto
+        },
+        [11] = true, -- Parâmetro booleano para definir o estado do tiro
+        [12] = false -- Outro parâmetro booleano (provavelmente para efeitos adicionais)
+    }
 
-Window:SelectTab(1)
+    -- Dispara a sniper com som personalizado
+    game:GetService("ReplicatedStorage").RE:FindFirstChild("1Gu1n"):FireServer(unpack(argsShoot))
+    print("Sniper atirou com o som personalizado!")
+end)
+
+-- Exibe a interface
+Library:Init()
